@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # 🛡️ DefendX — Autonomous SOC Defense Platform
 
@@ -165,8 +165,8 @@ The frontend is built to mirror a **Prisma-backed** backend schema:
 
 ```bash
 # Clone the repository
-git clone https://github.com/rajaXcodes/SOC_frontend.git
-cd SOC_frontend
+git clone https://github.com/Rajat01-agg/DefendX.git
+cd DefendX
 
 # Install dependencies
 npm install
@@ -257,4 +257,3 @@ This project is open source and available under the [MIT License](LICENSE).
 *DefendX — Because every second counts in cybersecurity.*
 
 </div>
-]]>
