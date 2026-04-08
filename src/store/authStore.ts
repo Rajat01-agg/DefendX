@@ -16,10 +16,10 @@ interface AuthState {
 }
 
 const MOCK_USER: User = {
-  name: 'Rajat Aggarwal',
-  email: 'rajat@defendx.io',
+  name: 'Acme Corporation',
+  email: 'rajat.aggarwal@acmecorp.com',
   role: 'CISO',
-  clearance: 'LEVEL 4 CLEARANCE',
+  clearance: 'ACME CORP ADMINISTRATOR',
 }
 
 export const useAuthStore = create<AuthState>((set) => ({

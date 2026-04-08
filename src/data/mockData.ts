@@ -1,5 +1,5 @@
 import type {
-  Job, Finding, Action, GlobalStat, DomainStat, ActionType, Domain, Severity
+  Job, Finding, Action, Report, GlobalStat, DomainStat, ActionType, Domain, Severity
 } from '../types/schema'
 
 // ── Global Stats (singleton) ──────────────────────────────────────────────
@@ -34,7 +34,7 @@ export const mockFindings: Finding[] = [
   {
     id: 'f2', jobId: 'job-001', findingId: 'INC-002',
     domain: 'http', classification: 'ddos', severity: 'high', confidence: 0.92,
-    context: { service: 'upi-gateway', app: 'payment-router', environment: 'production' },
+    context: { service: 'payment-gateway', app: 'payment-router', environment: 'production' },
     offender: { type: 'ip', value: '103.45.xx.xx' },
     metrics: { event_count: 450000, unique_targets: 3, success_count: 0, failure_count: 450000 },
     timeWindowFrom: Date.now() - 7200_000, timeWindowTo: Date.now(),
@@ -42,14 +42,14 @@ export const mockFindings: Finding[] = [
       'UDP flood rate: 450k pps from 847 unique source IPs',
       'Botnet C2 signature matched against threat feed',
     ],
-    summary: 'Anomalous UDP flood pattern detected targeting UPI regional gateway nodes.',
+    summary: 'Anomalous UDP flood pattern detected targeting Payment regional gateway nodes.',
     createdAt: '2026-04-09T08:22:00Z',
     actions: [],
   },
   {
     id: 'f3', jobId: 'job-002', findingId: 'INC-003',
     domain: 'auth', classification: 'brute_force', severity: 'high', confidence: 0.95,
-    context: { service: 'auth-api', app: 'aadhaar-auth', environment: 'production' },
+    context: { service: 'iam-auth', app: 'iam-auth', environment: 'production' },
     offender: { type: 'ip', value: '103.4xx.xx.x' },
     metrics: { event_count: 127, unique_targets: 5, success_count: 0, failure_count: 127 },
     timeWindowFrom: Date.now() - 5400_000, timeWindowTo: Date.now(),
@@ -57,14 +57,14 @@ export const mockFindings: Finding[] = [
       'auth_fail user="root" ip=103.4xx.xx.x attempts=42',
       'auth_fail user="admin" ip=103.4xx.xx.x attempts=85',
     ],
-    summary: 'Multiple failed login attempts detected on Aadhaar Auth API from single source IP.',
+    summary: 'Multiple failed login attempts detected on Identity Services API from single source IP.',
     createdAt: '2026-04-09T07:30:00Z',
     actions: [],
   },
   {
     id: 'f4', jobId: 'job-002', findingId: 'INC-004',
     domain: 'auth', classification: 'credential_stuffing', severity: 'medium', confidence: 0.84,
-    context: { service: 'digilocker-web', app: 'auth-portal', environment: 'production' },
+    context: { service: 'customer-portal', app: 'auth-portal', environment: 'production' },
     offender: { type: 'ip', value: '45.33.xx.xx' },
     metrics: { event_count: 89, unique_targets: 23, success_count: 3, failure_count: 86 },
     timeWindowFrom: Date.now() - 10800_000, timeWindowTo: Date.now(),
@@ -72,7 +72,7 @@ export const mockFindings: Finding[] = [
       'Unusual login frequency: 89 attempts in 15 min from 45.33.xx.xx',
       '3 successful logins to different accounts from same IP',
     ],
-    summary: 'Credential stuffing pattern detected across DigiLocker web portal with partial success.',
+    summary: 'Credential stuffing pattern detected across Customer web portal with partial success.',
     createdAt: '2026-04-09T05:55:00Z',
     actions: [],
   },
@@ -150,7 +150,7 @@ export const mockActions: Action[] = [
   {
     id: 'a2', jobId: 'job-001', findingId: 'f2',
     domain: 'http', actionType: 'rate_limit',
-    description: 'Rate limit applied to 847 botnet source IPs targeting UPI gateway',
+    description: 'Rate limit applied to 847 botnet source IPs targeting Payment gateway',
     status: 'DONE', completedAt: '2026-04-09T08:22:02Z', createdAt: '2026-04-09T08:22:01Z',
   },
   {
@@ -251,14 +251,99 @@ export const mockJobs: Job[] = [
       { id: 'ds12', jobId: 'job-004', domain: 'infra', logsProcessed: 8032, findingsCount: 1, actionsCount: 1 },
     ],
   },
+  {
+    id: 'j5', jobId: 'job-005', status: 'ANALYZING',
+    windowFrom: Date.now() - 1800_000, windowTo: Date.now(),
+    totalLogs: 12340, findingsCount: 0, actionsCount: 0,
+    createdAt: new Date().toISOString(),
+    findings: [],
+    actions: [],
+    domainStats: [
+      { id: 'ds13', jobId: 'job-005', domain: 'http', logsProcessed: 6200, findingsCount: 0, actionsCount: 0 },
+      { id: 'ds14', jobId: 'job-005', domain: 'auth', logsProcessed: 3800, findingsCount: 0, actionsCount: 0 },
+      { id: 'ds15', jobId: 'job-005', domain: 'infra', logsProcessed: 2340, findingsCount: 0, actionsCount: 0 },
+    ],
+  },
 ]
+
+// ── Mock Reports ──────────────────────────────────────────────────────────
+// One Report per completed job — matches Prisma Report model exactly
+
+export const mockReports: Report[] = [
+  {
+    id: 'r1',
+    jobId: 'job-001',
+    jsonReport: {
+      jobId: 'job-001',
+      windowFrom: Date.now() - 7200_000,
+      windowTo: Date.now() - 3600_000,
+      totalLogs: 48210,
+      findings: mockFindings.filter(f => f.jobId === 'job-001'),
+      actions: mockActions.filter(a => a.jobId === 'job-001'),
+      metadata: { agentVersion: '4.2.0', analysisTimeMs: 2140, model: 'commander-v3' },
+    },
+    humanReport: `# SOC Report — Job job-001\n\n## Executive Summary\nTwo critical threats detected targeting HTTP layer infrastructure during the analysis window.\n\n## Findings\n\n### INC-001 — SQL Injection (CRITICAL)\n- **Source**: 185.220.101.45\n- **Target**: api-gateway / user-query-svc (production)\n- **Confidence**: 97%\n- 34 events detected, all blocked. UNION SELECT payload targeting user table.\n- **Action Taken**: IP quarantined at WAF layer.\n\n### INC-002 — DDoS (HIGH)\n- **Source**: 103.45.xx.xx (847 botnet nodes)\n- **Target**: upi-gateway / payment-router (production)\n- **Confidence**: 92%\n- 450,000 events detected. UDP flood at 450k pps.\n- **Action Taken**: Rate limiting applied to 847 source IPs.\n\n## Recommendation\nMonitor for persistence from the SQL injection source network block. Consider permanent blocklist.`,
+    createdAt: '2026-04-09T08:00:03Z',
+  },
+  {
+    id: 'r2',
+    jobId: 'job-002',
+    jsonReport: {
+      jobId: 'job-002',
+      windowFrom: Date.now() - 10800_000,
+      windowTo: Date.now() - 7200_000,
+      totalLogs: 35800,
+      findings: mockFindings.filter(f => f.jobId === 'job-002'),
+      actions: mockActions.filter(a => a.jobId === 'job-002'),
+      metadata: { agentVersion: '4.2.0', analysisTimeMs: 1890, model: 'commander-v3' },
+    },
+    humanReport: `# SOC Report — Job job-002\n\n## Executive Summary\nTwo authentication-layer threats detected. Brute force and credential stuffing attacks against identity services.\n\n## Findings\n\n### INC-003 — Brute Force (HIGH)\n- **Source**: 103.4xx.xx.x (Sofia, Bulgaria)\n- **Target**: iam-auth / iam-auth (production)\n- **Confidence**: 95%\n- 127 failed login attempts across 5 target accounts.\n- **Action Taken**: Source IP blocked at auth-api endpoint.\n\n### INC-004 — Credential Stuffing (MEDIUM)\n- **Source**: 45.33.xx.xx\n- **Target**: customer-portal / auth-portal (production)\n- **Confidence**: 84%\n- 89 attempts, 3 successful logins — accounts flagged.\n- **Action Taken**: SOC alert raised for compromised accounts.\n\n## Recommendation\nForce password resets for the 3 compromised Customer accounts. Add source IP to threat intel watchlist.`,
+    createdAt: '2026-04-09T05:00:02Z',
+  },
+  {
+    id: 'r3',
+    jobId: 'job-003',
+    jsonReport: {
+      jobId: 'job-003',
+      windowFrom: Date.now() - 18000_000,
+      windowTo: Date.now() - 10800_000,
+      totalLogs: 28450,
+      findings: mockFindings.filter(f => f.jobId === 'job-003'),
+      actions: mockActions.filter(a => a.jobId === 'job-003'),
+      metadata: { agentVersion: '4.2.0', analysisTimeMs: 3210, model: 'commander-v3' },
+    },
+    humanReport: `# SOC Report — Job job-003\n\n## Executive Summary\nMixed domain threats: infrastructure resource exhaustion and authentication session compromise.\n\n## Findings\n\n### INC-005 — Resource Exhaustion (CRITICAL)\n- **Source**: payment-processor-pod-xz91 (internal)\n- **Target**: k8s-cluster-07 (production)\n- **Confidence**: 98%\n- Pod OOMKilled 5 times in 30 minutes. Memory: 7.8Gi / 8Gi limit.\n- **Action Taken**: Escalated for manual review (requires human approval).\n\n### INC-006 — Session Hijacking (HIGH)\n- **Source**: j.doe@corp.co\n- **Target**: session-mgr / user-portal (production)\n- **Confidence**: 88%\n- Impossible travel: Delhi → London in 4 minutes (6,700 km).\n- **Action Taken**: All sessions revoked, MFA forced.\n\n## Recommendation\nInvestigate payment-processor memory leak. Conduct forensic analysis on j.doe account compromise.`,
+    createdAt: '2026-04-09T02:00:04Z',
+  },
+  {
+    id: 'r4',
+    jobId: 'job-004',
+    jsonReport: {
+      jobId: 'job-004',
+      windowFrom: Date.now() - 28800_000,
+      windowTo: Date.now() - 18000_000,
+      totalLogs: 30432,
+      findings: mockFindings.filter(f => f.jobId === 'job-004'),
+      actions: mockActions.filter(a => a.jobId === 'job-004'),
+      metadata: { agentVersion: '4.2.0', analysisTimeMs: 1740, model: 'commander-v3' },
+    },
+    humanReport: `# SOC Report — Job job-004\n\n## Executive Summary\nInfrastructure config drift and perimeter reconnaissance detected.\n\n## Findings\n\n### INC-007 — Config Drift (MEDIUM)\n- **Source**: ingress-nginx-controller (internal)\n- **Target**: k8s-cluster-07 / ingress-controller (staging)\n- **Confidence**: 91%\n- TLS minimum version downgraded from 1.2 to 1.0 in ConfigMap.\n- **Action Taken**: SOC alert raised for policy violation.\n\n### INC-008 — Port Scan (LOW)\n- **Source**: 91.121.xx.xx (external)\n- **Target**: edge-firewall / perimeter-scan (production)\n- **Confidence**: 72%\n- Sequential scan of ports 1–1024. 12 open ports detected.\n- **Action Taken**: Source IP blocked at perimeter firewall.\n\n## Recommendation\nRevert TLS config in staging. Review exposed ports and close unnecessary services.`,
+    createdAt: '2026-04-08T15:00:02Z',
+  },
+]
+
+// Wire reports into jobs
+mockJobs.forEach(job => {
+  const report = mockReports.find(r => r.jobId === job.jobId)
+  if (report) job.report = report
+})
 
 // ── Aggregated DomainStats (across all jobs) ──────────────────────────────
 
 export const aggregatedDomainStats: Record<Domain, { logsProcessed: number; findingsCount: number; actionsCount: number }> = {
-  http: { logsProcessed: 73700, findingsCount: 3, actionsCount: 3 },
-  auth: { logsProcessed: 43600, findingsCount: 3, actionsCount: 3 },
-  infra: { logsProcessed: 25592, findingsCount: 2, actionsCount: 2 },
+  http: { logsProcessed: 79900, findingsCount: 3, actionsCount: 3 },
+  auth: { logsProcessed: 47400, findingsCount: 3, actionsCount: 3 },
+  infra: { logsProcessed: 27932, findingsCount: 2, actionsCount: 2 },
 }
 
 // ── 24-hour chart data (findings + logs per hour) ─────────────────────────
@@ -307,11 +392,11 @@ export interface PortalService {
 }
 
 export const mockPortals: PortalService[] = [
-  { name: 'Aadhaar Services', status: 'normal', traffic: '1.2M req/s', latency: '42ms', activity: 'Stable' },
-  { name: 'UPI Gateway', status: 'risk', traffic: '8.4M req/s', latency: '128ms', activity: 'High' },
-  { name: 'DigiLocker', status: 'attack', traffic: '320k req/s', latency: '540ms', activity: 'Critical' },
-  { name: 'GSTN Portal', status: 'normal', traffic: '540k req/s', latency: '68ms', activity: 'Normal' },
-  { name: 'IRCTC API', status: 'normal', traffic: '2.1M req/s', latency: '55ms', activity: 'Stable' },
+  { name: 'Identity Services', status: 'normal', traffic: '1.2M req/s', latency: '42ms', activity: 'Stable' },
+  { name: 'Payment Gateway', status: 'risk', traffic: '8.4M req/s', latency: '128ms', activity: 'High' },
+  { name: 'Customer Portal', status: 'attack', traffic: '320k req/s', latency: '540ms', activity: 'Critical' },
+  { name: 'B2B Invoicing', status: 'normal', traffic: '540k req/s', latency: '68ms', activity: 'Normal' },
+  { name: 'Public API Gateway', status: 'normal', traffic: '2.1M req/s', latency: '55ms', activity: 'Stable' },
 ]
 
 // ── Log event types for telemetry stream ──────────────────────────────────

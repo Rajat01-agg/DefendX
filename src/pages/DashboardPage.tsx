@@ -1,8 +1,7 @@
 import AttackVolumeChart from '../components/charts/AttackVolumeChart'
 import FindingsFeed from '../components/dashboard/IncidentFeed'
 import AutomatedActions from '../components/dashboard/AutomatedActions'
-import PortalStatusTable from '../components/dashboard/PortalStatusTable'
-import { mockGlobalStat, aggregatedDomainStats, mockJobs } from '../data/mockData'
+import { mockGlobalStat, aggregatedDomainStats, mockJobs, mockFindings } from '../data/mockData'
 import { DOMAIN_LABELS, DOMAIN_COLORS, JOB_STATUS_COLORS, JOB_STATUS_LABELS } from '../types/schema'
 import type { Domain } from '../types/schema'
 import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, Globe, HardDrive, Zap, Layers } from 'lucide-react'
@@ -57,8 +56,8 @@ const BOTTOM_STATS = [
 export default function DashboardPage() {
   const g = mockGlobalStat
 
-  // Compute active critical findings
-  const critActive = 2 // from mock — in production this comes from API
+  // Compute active critical findings from mock data
+  const critActive = mockFindings.filter(f => f.severity === 'critical').length
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -76,7 +75,7 @@ export default function DashboardPage() {
         <MetricCard
           label="TOTAL FINDINGS"
           value={g.totalFindings.toLocaleString()}
-          sub="Detected by Commander Agent"
+          sub={`${critActive} critical active`}
           accentColor="#FF2D55"
           icon={<AlertTriangle size={16} color="#FF2D55" />}
         />
@@ -185,8 +184,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Portal Status */}
-      <PortalStatusTable />
+
 
       {/* Bottom stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>

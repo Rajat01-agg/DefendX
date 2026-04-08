@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Bell, Search, Settings, HelpCircle, ChevronDown } from 'lucide-react'
 import { useAuthStore } from '../../store/authStore'
-import { useLocation } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 
 const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
   '/dashboard': { title: 'Executive Dashboard', subtitle: 'OPERATIONAL OVERSIGHT' },
@@ -12,14 +12,15 @@ const PAGE_TITLES: Record<string, { title: string; subtitle: string }> = {
 }
 
 const NOTIFICATIONS = [
-  { id: 1, text: 'Critical threat detected on DigiLocker', time: '2m ago', urgent: true },
-  { id: 2, text: 'DDoS mitigation completed for UPI node', time: '14m ago', urgent: false },
-  { id: 3, text: 'CERT-In compliance report generated', time: '1h ago', urgent: false },
+  { id: 1, text: 'Critical threat detected on Customer Portal', time: '2m ago', urgent: true },
+  { id: 2, text: 'DDoS mitigation completed for Payment Gateway', time: '14m ago', urgent: false },
+  { id: 3, text: 'SOC-2 compliance report generated', time: '1h ago', urgent: false },
 ]
 
 export default function Navbar() {
   const user = useAuthStore(s => s.user)
   const location = useLocation()
+  const navigate = useNavigate()
   const [showNotifications, setShowNotifications] = useState(false)
   const [search, setSearch] = useState('')
   const page = PAGE_TITLES[location.pathname] ?? { title: 'DefendX', subtitle: 'SECURITY OPERATIONS' }
@@ -139,7 +140,9 @@ export default function Navbar() {
           )}
         </div>
 
-        <button style={{
+        <button 
+          onClick={() => navigate('/settings')}
+          style={{
           width: 36, height: 36, borderRadius: '8px',
           background: '#111827', border: '1px solid #1E2D4A',
           display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
@@ -156,7 +159,9 @@ export default function Navbar() {
         </button>
 
         {/* Profile */}
-        <div style={{
+        <div 
+          onClick={() => navigate('/profile')}
+          style={{
           display: 'flex', alignItems: 'center', gap: '8px',
           padding: '5px 10px 5px 6px',
           background: '#111827', border: '1px solid #1E2D4A',
@@ -172,7 +177,7 @@ export default function Navbar() {
           </div>
           <div>
             <div style={{ fontSize: '12px', fontWeight: 600, color: '#E8EAF0', lineHeight: 1.2 }}>{user?.role ?? 'CISO Office'}</div>
-            <div style={{ fontSize: '10px', color: '#00D4FF', lineHeight: 1.2 }}>LEVEL 4 CLEARANCE</div>
+            <div style={{ fontSize: '10px', color: '#00D4FF', lineHeight: 1.2 }}>{user?.clearance ?? 'ADMINISTRATOR'}</div>
           </div>
           <ChevronDown size={13} color="#4A5568" />
         </div>

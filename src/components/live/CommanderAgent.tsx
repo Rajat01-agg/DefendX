@@ -12,9 +12,9 @@ const SCENARIOS: { domain: string; classification: string; findingId: string; st
   {
     domain: 'auth', classification: 'brute_force', findingId: 'INC-003',
     steps: [
-      { stage: 'DETECTED', message: 'Pattern match: 127 auth failures from single source in 15 min window.', detail: 'Domain: auth · Service: auth-api · Env: production' },
+      { stage: 'DETECTED', message: 'Pattern match: 127 auth failures from single source in 15 min window.', detail: 'Domain: auth · Service: iam-auth · Env: production' },
       { stage: 'ANALYZING', message: 'Geo-IP enrichment: Source 103.4xx.xx.x localized to Sofia, Bulgaria. No prior history. Confidence: 0.95.', detail: 'Offender: ip → 103.4xx.xx.x · event_count: 127' },
-      { stage: 'CONCLUSION', message: "Confirmed brute_force on Aadhaar Auth API. Escalating → Remediation Agent: block_ip.", detail: 'Finding INC-003 severity=high · ActionType: block_ip' },
+      { stage: 'CONCLUSION', message: "Confirmed brute_force on Identity Services API. Escalating → Remediation Agent: block_ip.", detail: 'Finding INC-003 severity=high · ActionType: block_ip' },
     ],
   },
   {
@@ -28,7 +28,7 @@ const SCENARIOS: { domain: string; classification: string; findingId: string; st
   {
     domain: 'http', classification: 'ddos', findingId: 'INC-002',
     steps: [
-      { stage: 'DETECTED', message: 'Anomalous UDP flood: 450k pps targeting UPI gateway service.', detail: 'Domain: http · Service: upi-gateway · Env: production' },
+      { stage: 'DETECTED', message: 'Anomalous UDP flood: 450k pps targeting payment gateway service.', detail: 'Domain: http · Service: payment-gateway · Env: production' },
       { stage: 'ANALYZING', message: 'Traffic source analysis: 847 unique IPs, botnet C2 signature confirmed. event_count: 450,000.', detail: 'Offender: ip → 103.45.xx.xx · Confidence: 0.92' },
       { stage: 'CONCLUSION', message: 'DDoS confirmed. Rate limiting applied to 847 source IPs. ActionType: rate_limit.', detail: 'Finding INC-002 severity=high · Mitigation time: 1.8s' },
     ],

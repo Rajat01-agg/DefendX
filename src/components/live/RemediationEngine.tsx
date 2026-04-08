@@ -27,7 +27,7 @@ const REMEDIATION_STATES: RemediationState[] = [
     actionType: 'rate_limit', domain: 'http', actionStatus: 'DONE',
     description: 'Rate limit applied to 847 botnet source IPs',
     findingId: 'INC-002', offender: 'ip: 103.45.xx.xx (847 sources)',
-    quote: '"DDoS traffic null-routed. UPI gateway latency restored"',
+    quote: '"DDoS traffic null-routed. Payment gateway latency restored"',
     doneCount: 1243, load: '0.06%',
   },
   {
@@ -57,6 +57,17 @@ export default function RemediationEngine() {
   const [stateIdx, setStateIdx] = useState(0)
   const [doneCount, setDoneCount] = useState(REMEDIATION_STATES[0].doneCount)
   const current = REMEDIATION_STATES[stateIdx]
+
+  const handleDownloadLog = () => {
+    const logText = "--- DEFENDX REMEDIATION AUDIT LOG ---\n"
+      + `Generated: ${new Date().toISOString()}\n\n`
+      + REMEDIATION_STATES.map(r => `[${r.findingId}] Domain: ${r.domain} | Action: ${r.actionType} | Status: ${r.actionStatus} | Target: ${r.offender}\n> ${r.description}\n`).join("\n");
+    const textContent = "data:text/plain;charset=utf-8," + encodeURIComponent(logText);
+    const link = document.createElement("a");
+    link.href = textContent;
+    link.download = "remediation_audit_log.txt";
+    link.click();
+  }
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -200,7 +211,9 @@ export default function RemediationEngine() {
       </div>
 
       {/* Download button */}
-      <button style={{
+      <button 
+        onClick={handleDownloadLog}
+        style={{
         width: '100%',
         padding: '10px',
         background: '#0D1220',

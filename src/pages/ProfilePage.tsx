@@ -4,7 +4,7 @@ import { Shield, Activity, CheckCircle, Clock, Award, Lock } from 'lucide-react'
 const ACTIVITY_TIMELINE = [
   { action: 'Reviewed incident #EIC-2026-001', time: '09:41 AM', type: 'review' },
   { action: 'Approved remediation for DDoS attempt', time: '08:22 AM', type: 'approve' },
-  { action: 'Generated CERT-In compliance report', time: 'Yesterday 3:30 PM', type: 'report' },
+  { action: 'Generated SOC-2 compliance report', time: 'Yesterday 3:30 PM', type: 'report' },
   { action: 'Updated WAF rule set v48', time: 'Yesterday 11:00 AM', type: 'config' },
   { action: 'Escalated incident #EIC-2026-004', time: '2 days ago', type: 'escalate' },
 ]
@@ -49,7 +49,7 @@ export default function ProfilePage() {
             <div style={{ fontSize: '14px', color: '#6B7280', marginBottom: '4px' }}>{user?.email}</div>
             <div style={{ fontSize: '13px', color: '#9BA3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Shield size={12} color="#00D4FF" />
-              {user?.role} — DefendX Security Operations
+              {user?.role} — Acme Corp Security Operations
             </div>
           </div>
         </div>
