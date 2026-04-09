@@ -1,7 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import LandingPage from './pages/LandingPage'
-import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import LiveActivityPage from './pages/LiveActivityPage'
 import ReportsPage from './pages/ReportsPage'
@@ -11,7 +10,7 @@ import AppLayout from './components/layout/AppLayout'
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const isAuthenticated = useAuthStore(s => s.isAuthenticated)
-  if (!isAuthenticated) return <Navigate to="/login" replace />
+  if (!isAuthenticated) return <Navigate to="/" replace />
   return <>{children}</>
 }
 
@@ -21,7 +20,6 @@ export default function App() {
       <div className="scan-line" />
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<LoginPage />} />
         <Route
           path="/dashboard"
           element={

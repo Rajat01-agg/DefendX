@@ -1,208 +1,193 @@
 import AttackVolumeChart from '../components/charts/AttackVolumeChart'
 import FindingsFeed from '../components/dashboard/IncidentFeed'
 import AutomatedActions from '../components/dashboard/AutomatedActions'
+import PortalStatusTable from '../components/dashboard/PortalStatusTable'
 import { mockGlobalStat, aggregatedDomainStats, mockJobs, mockFindings } from '../data/mockData'
 import { DOMAIN_LABELS, DOMAIN_COLORS, JOB_STATUS_COLORS, JOB_STATUS_LABELS } from '../types/schema'
 import type { Domain } from '../types/schema'
-import { TrendingUp, TrendingDown, AlertTriangle, CheckCircle, Clock, Globe, HardDrive, Zap, Layers } from 'lucide-react'
-
-interface MetricCardProps {
-  label: string
-  value: string
-  sub: string
-  trend?: 'up' | 'down'
-  trendLabel?: string
-  accentColor: string
-  icon: React.ReactNode
-}
-
-function MetricCard({ label, value, sub, trend, trendLabel, accentColor, icon }: MetricCardProps) {
-  return (
-    <div className="card" style={{ padding: '20px', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '2px', background: `linear-gradient(90deg, ${accentColor}, transparent)` }} />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-        <div style={{ fontSize: '11px', color: '#4A5568', letterSpacing: '1px', fontWeight: 600 }}>{label}</div>
-        <div style={{
-          width: 32, height: 32, borderRadius: '8px',
-          background: `${accentColor}18`,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-        }}>
-          {icon}
-        </div>
-      </div>
-      <div style={{ fontSize: '28px', fontWeight: 800, color: '#E8EAF0', lineHeight: 1, marginBottom: '8px' }}>
-        {value}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-        {trend && (
-          <span style={{ color: trend === 'up' ? accentColor : '#FF2D55', display: 'flex', alignItems: 'center', gap: '2px' }}>
-            {trend === 'up' ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
-            <span style={{ fontSize: '11px', fontWeight: 600 }}>{trendLabel}</span>
-          </span>
-        )}
-        <span style={{ fontSize: '11px', color: '#4A5568' }}>{sub}</span>
-      </div>
-      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', background: `linear-gradient(90deg, ${accentColor}44, transparent)` }} />
-    </div>
-  )
-}
-
-const BOTTOM_STATS = [
-  { label: 'NETWORK LOAD', value: '4.2 GB/s', icon: <Globe size={20} color="#00D4FF" />, color: '#00D4FF' },
-  { label: 'GLOBAL NODES', value: '12 / 12', icon: <Zap size={20} color="#00FF88" />, color: '#00FF88' },
-  { label: 'STORAGE REDUNDANCY', value: '99.99%', icon: <HardDrive size={20} color="#8B5CF6" />, color: '#8B5CF6' },
-]
+import { TrendingUp, AlertTriangle, CheckCircle, Clock, Layers, ShieldCheck, BarChart3 } from 'lucide-react'
+import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
 
 export default function DashboardPage() {
   const g = mockGlobalStat
-
-  // Compute active critical findings from mock data
   const critActive = mockFindings.filter(f => f.severity === 'critical').length
+  const highActive = mockFindings.filter(f => f.severity === 'high').length
+
+  // Domain pie data
+  const domainPieData = (['http', 'auth', 'infra'] as Domain[]).map(d => ({
+    name: DOMAIN_LABELS[d],
+    value: aggregatedDomainStats[d].findingsCount,
+    color: DOMAIN_COLORS[d],
+  }))
+
+  // Severity breakdown for card
+  const sevBreakdown = [
+    { label: 'Critical', count: critActive, color: '#E31A1A' },
+    { label: 'High', count: highActive, color: '#E09B30' },
+    { label: 'Medium', count: mockFindings.filter(f => f.severity === 'medium').length, color: '#7551FF' },
+    { label: 'Low', count: mockFindings.filter(f => f.severity === 'low').length, color: '#3965FF' },
+  ]
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-      {/* Top metrics — from GlobalStat */}
+      {/* Top metrics */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-        <MetricCard
-          label="TOTAL LOGS PROCESSED"
-          value={g.totalLogs.toLocaleString()}
-          sub={`Across ${g.totalJobs} jobs`}
-          trend="up"
-          trendLabel="12%"
-          accentColor="#00D4FF"
-          icon={<Layers size={16} color="#00D4FF" />}
-        />
-        <MetricCard
-          label="TOTAL FINDINGS"
-          value={g.totalFindings.toLocaleString()}
-          sub={`${critActive} critical active`}
-          accentColor="#FF2D55"
-          icon={<AlertTriangle size={16} color="#FF2D55" />}
-        />
-        <MetricCard
-          label="TOTAL ACTIONS TAKEN"
-          value={g.totalActions.toLocaleString()}
-          sub="Autonomously remediated"
-          trend="up"
-          trendLabel="↑"
-          accentColor="#00FF88"
-          icon={<CheckCircle size={16} color="#00FF88" />}
-        />
-        <MetricCard
-          label="TOTAL JOBS"
-          value={g.totalJobs.toLocaleString()}
-          sub="Pipeline executions"
-          accentColor="#8B5CF6"
-          icon={<Clock size={16} color="#8B5CF6" />}
-        />
-      </div>
-
-      {/* Chart + Automated Actions */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: '16px' }}>
-        <AttackVolumeChart />
-        <AutomatedActions />
-      </div>
-
-      {/* Findings Feed + Domain Breakdown + Recent Jobs */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-        <FindingsFeed />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          {/* Domain Breakdown — from DomainStat */}
-          <div className="card" style={{ padding: '20px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-              <Layers size={16} color="#00D4FF" />
-              <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#E8EAF0' }}>Threat Domain Breakdown</h3>
+        {[
+          {
+            label: 'TOTAL SIGNALS',
+            value: g.totalLogs.toLocaleString(),
+            sub: `+12% vs last 24h`,
+            trend: true,
+            accentColor: '#3965FF',
+            icon: <BarChart3 size={18} color="#3965FF" />,
+          },
+          {
+            label: 'CRITICAL ACTIVE',
+            value: String(critActive).padStart(2, '0'),
+            sub: critActive > 0 ? '⚠ Immediate Action Required' : 'All Clear',
+            trend: false,
+            accentColor: '#EE5D50',
+            icon: <AlertTriangle size={18} color="#EE5D50" />,
+          },
+          {
+            label: 'CONTAINED TODAY',
+            value: g.totalActions.toLocaleString(),
+            sub: `98.2% containment rate`,
+            trend: true,
+            accentColor: '#05CD99',
+            icon: <CheckCircle size={18} color="#05CD99" />,
+          },
+          {
+            label: 'PENDING REVIEW',
+            value: String(g.totalJobs).padStart(2, '0'),
+            sub: `${mockJobs.filter(j => j.status !== 'COMPLETED').length} active since 09:00`,
+            trend: false,
+            accentColor: '#7551FF',
+            icon: <Clock size={18} color="#7551FF" />,
+          },
+        ].map(({ label, value, sub, trend, accentColor, icon }) => (
+          <div key={label} className="card" style={{ padding: '20px', position: 'relative' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '14px' }}>
+              <div style={{ fontSize: '11px', color: 'var(--text-muted)', letterSpacing: '1px', fontWeight: 600, textTransform: 'uppercase' }}>{label}</div>
+              <div style={{
+                width: 38, height: 38, borderRadius: '12px',
+                background: `${accentColor}12`,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+              }}>
+                {icon}
+              </div>
             </div>
-            {(['http', 'auth', 'infra'] as Domain[]).map(domain => {
-              const stat = aggregatedDomainStats[domain]
-              const color = DOMAIN_COLORS[domain]
-              const totalLogs = mockGlobalStat.totalLogs
-              const pct = ((stat.logsProcessed / totalLogs) * 100).toFixed(1)
+            <div style={{ fontSize: '30px', fontWeight: 800, color: 'var(--text-primary)', lineHeight: 1, marginBottom: '8px' }}>
+              {value}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              {trend && <TrendingUp size={12} color={accentColor} />}
+              <span style={{ fontSize: '12px', color: accentColor === '#EE5D50' ? '#EE5D50' : 'var(--text-secondary)', fontWeight: 500 }}>{sub}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Chart + Live Incident Feed */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '20px' }}>
+        <AttackVolumeChart />
+        <FindingsFeed />
+      </div>
+
+      {/* Portal Status + Threat Domain Breakdown */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '20px' }}>
+        <PortalStatusTable />
+
+        <div className="card" style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <ShieldCheck size={16} color="#3965FF" />
+            <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Threat Domain Breakdown</h3>
+          </div>
+
+          {/* Donut Chart */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <div style={{ width: 130, height: 130, position: 'relative' }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie data={domainPieData} cx="50%" cy="50%" innerRadius={38} outerRadius={58} paddingAngle={4} dataKey="value" strokeWidth={0}>
+                    {domainPieData.map((entry, i) => (
+                      <Cell key={i} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+              <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', textAlign: 'center' }}>
+                <div style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-primary)' }}>100%</div>
+                <div style={{ fontSize: '9px', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>SCOPED</div>
+              </div>
+            </div>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {domainPieData.map(d => (
+                <div key={d.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: 10, height: 10, borderRadius: '3px', background: d.color, display: 'block' }} />
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)' }}>{d.name}</div>
+                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{d.value} findings</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Severity Breakdown */}
+          <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border)' }}>
+            <div style={{ fontSize: '11px', fontWeight: 600, color: 'var(--text-muted)', letterSpacing: '0.5px', marginBottom: '10px' }}>SEVERITY BREAKDOWN</div>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              {sevBreakdown.map(s => (
+                <div key={s.label} style={{
+                  flex: 1, padding: '8px 10px', borderRadius: '10px',
+                  background: `${s.color}0D`, textAlign: 'center',
+                }}>
+                  <div style={{ fontSize: '18px', fontWeight: 700, color: s.color }}>{s.count}</div>
+                  <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>{s.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Recent Actions + Recent Jobs */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+        <AutomatedActions />
+
+        <div className="card" style={{ padding: '20px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+            <Layers size={16} color="#7551FF" />
+            <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Recent Pipeline Jobs</h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {mockJobs.map(job => {
+              const statusColor = JOB_STATUS_COLORS[job.status]
               return (
-                <div key={domain} style={{ marginBottom: '14px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{
-                        width: 8, height: 8, borderRadius: '2px', background: color, display: 'block',
-                      }} />
-                      <span style={{ fontSize: '12px', color: '#E8EAF0', fontWeight: 500 }}>{DOMAIN_LABELS[domain]}</span>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                      <span style={{ fontSize: '10px', color: '#6B7280', fontFamily: 'JetBrains Mono, monospace' }}>
-                        {stat.findingsCount} findings
-                      </span>
-                      <span style={{ fontSize: '10px', color: '#6B7280', fontFamily: 'JetBrains Mono, monospace' }}>
-                        {stat.actionsCount} actions
-                      </span>
-                      <span style={{ fontSize: '11px', color, fontWeight: 700, fontFamily: 'JetBrains Mono, monospace' }}>
-                        {pct}%
-                      </span>
+                <div key={job.id} style={{
+                  background: 'var(--bg-elevated)', border: '1px solid var(--border)', borderRadius: '12px',
+                  padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                }}>
+                  <div>
+                    <span style={{ fontSize: '13px', color: 'var(--text-accent)', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
+                      {job.jobId}
+                    </span>
+                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      {job.totalLogs.toLocaleString()} logs → {job.findingsCount} findings → {job.actionsCount} actions
                     </div>
                   </div>
-                  <div style={{ height: '6px', borderRadius: '3px', background: '#1E2D4A', overflow: 'hidden' }}>
-                    <div style={{
-                      width: `${pct}%`, height: '100%', borderRadius: '3px',
-                      background: `linear-gradient(90deg, ${color}, ${color}88)`,
-                      transition: 'width 1s ease',
-                    }} />
-                  </div>
+                  <span style={{
+                    padding: '4px 10px', borderRadius: '8px', fontSize: '11px', fontWeight: 600,
+                    background: `${statusColor}15`, color: statusColor,
+                  }}>
+                    {JOB_STATUS_LABELS[job.status]}
+                  </span>
                 </div>
               )
             })}
           </div>
-
-          {/* Recent Jobs */}
-          <div className="card" style={{ padding: '20px' }}>
-            <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#E8EAF0', marginBottom: '12px' }}>Recent Jobs</h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {mockJobs.map(job => {
-                const statusColor = JOB_STATUS_COLORS[job.status]
-                return (
-                  <div key={job.id} style={{
-                    background: '#0D1220', border: '1px solid #1E2D4A', borderRadius: '8px',
-                    padding: '10px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  }}>
-                    <div>
-                      <span style={{ fontSize: '12px', color: '#00D4FF', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
-                        {job.jobId}
-                      </span>
-                      <span style={{ fontSize: '11px', color: '#4A5568', marginLeft: '10px' }}>
-                        {job.totalLogs.toLocaleString()} logs → {job.findingsCount} findings → {job.actionsCount} actions
-                      </span>
-                    </div>
-                    <span style={{
-                      padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: 700,
-                      background: `${statusColor}18`, color: statusColor, letterSpacing: '0.5px',
-                    }}>
-                      {JOB_STATUS_LABELS[job.status]}
-                    </span>
-                  </div>
-                )
-              })}
-            </div>
-          </div>
         </div>
-      </div>
-
-
-
-      {/* Bottom stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
-        {BOTTOM_STATS.map(({ label, value, icon, color }) => (
-          <div key={label} className="card" style={{ padding: '20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontSize: '10px', color: '#4A5568', letterSpacing: '1.5px', fontWeight: 600, marginBottom: '8px' }}>{label}</div>
-              <div style={{ fontSize: '24px', fontWeight: 700, color: '#E8EAF0' }}>{value}</div>
-            </div>
-            <div style={{
-              width: 48, height: 48, borderRadius: '12px',
-              background: `${color}18`, border: `1px solid ${color}30`,
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-            }}>
-              {icon}
-            </div>
-          </div>
-        ))}
       </div>
     </div>
   )

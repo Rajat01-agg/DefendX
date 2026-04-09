@@ -10,10 +10,10 @@ const ACTIVITY_TIMELINE = [
 ]
 
 const BADGES = [
-  { label: 'Zero Breach Q3', icon: '🏆', color: '#FFB800' },
-  { label: 'SOC Champion', icon: '⭐', color: '#00D4FF' },
-  { label: '100% Uptime', icon: '🟢', color: '#00FF88' },
-  { label: 'Compliance Elite', icon: '🛡️', color: '#8B5CF6' },
+  { label: 'Zero Breach Q3', icon: '🏆', color: '#FFB547' },
+  { label: 'SOC Champion', icon: '⭐', color: '#3965FF' },
+  { label: '100% Uptime', icon: '🟢', color: '#05CD99' },
+  { label: 'Compliance Elite', icon: '🛡️', color: '#7551FF' },
 ]
 
 export default function ProfilePage() {
@@ -25,30 +25,30 @@ export default function ProfilePage() {
       <div className="card" style={{ padding: '32px', position: 'relative', overflow: 'hidden' }}>
         <div style={{
           position: 'absolute', top: 0, left: 0, right: 0, height: '80px',
-          background: 'linear-gradient(135deg, rgba(0,212,255,0.1), rgba(139,92,246,0.1))',
+          background: 'linear-gradient(135deg, rgba(57,101,255,0.1), rgba(117,81,255,0.1))',
         }} />
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', gap: '24px', alignItems: 'flex-start' }}>
           <div style={{
             width: 80, height: 80, borderRadius: '20px', flexShrink: 0,
-            background: 'linear-gradient(135deg, #00D4FF, #8B5CF6)',
+            background: 'linear-gradient(135deg, #3965FF, #7551FF)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '28px', fontWeight: 800, color: '#fff',
-            border: '3px solid rgba(0,212,255,0.3)',
+            fontSize: '28px', fontWeight: 800, color: 'var(--bg-surface)',
+            border: '3px solid rgba(57,101,255,0.3)',
           }}>
             {user?.name.charAt(0)}
           </div>
           <div style={{ flex: 1 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-              <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#E8EAF0' }}>{user?.name}</h2>
+              <h2 style={{ fontSize: '22px', fontWeight: 800, color: 'var(--text-primary)' }}>{user?.name}</h2>
               <span style={{
                 padding: '3px 10px', borderRadius: '4px',
-                background: 'rgba(0,212,255,0.1)', border: '1px solid rgba(0,212,255,0.3)',
-                fontSize: '11px', color: '#00D4FF', fontWeight: 700, letterSpacing: '1px',
+                background: 'rgba(57,101,255,0.1)', border: '1px solid rgba(57,101,255,0.3)',
+                fontSize: '11px', color: '#3965FF', fontWeight: 700, letterSpacing: '1px',
               }}>{user?.clearance}</span>
             </div>
-            <div style={{ fontSize: '14px', color: '#6B7280', marginBottom: '4px' }}>{user?.email}</div>
-            <div style={{ fontSize: '13px', color: '#9BA3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Shield size={12} color="#00D4FF" />
+            <div style={{ fontSize: '14px', color: 'var(--text-secondary)', marginBottom: '4px' }}>{user?.email}</div>
+            <div style={{ fontSize: '13px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Shield size={12} color="#3965FF" />
               {user?.role} — Acme Corp Security Operations
             </div>
           </div>
@@ -57,18 +57,18 @@ export default function ProfilePage() {
         {/* Stats */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px', marginTop: '28px' }}>
           {[
-            { label: 'Incidents Resolved', value: '1,247', icon: <CheckCircle size={16} color="#00FF88" />, color: '#00FF88' },
-            { label: 'Avg Response Time', value: '2.8s', icon: <Activity size={16} color="#00D4FF" />, color: '#00D4FF' },
-            { label: 'Uptime', value: '99.97%', icon: <Clock size={16} color="#8B5CF6" />, color: '#8B5CF6' },
-            { label: 'Clearance Level', value: 'L4', icon: <Lock size={16} color="#FFB800" />, color: '#FFB800' },
+            { label: 'Incidents Resolved', value: '1,247', icon: <CheckCircle size={16} color="#05CD99" />, color: '#05CD99' },
+            { label: 'Avg Response Time', value: '2.8s', icon: <Activity size={16} color="#3965FF" />, color: '#3965FF' },
+            { label: 'Uptime', value: '99.97%', icon: <Clock size={16} color="#7551FF" />, color: '#7551FF' },
+            { label: 'Clearance Level', value: 'L4', icon: <Lock size={16} color="#FFB547" />, color: '#FFB547' },
           ].map(({ label, value, icon, color }) => (
             <div key={label} style={{
-              background: '#0D1220', border: '1px solid #1E2D4A', borderRadius: '10px',
+              background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '10px',
               padding: '14px', textAlign: 'center',
             }}>
               <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '8px' }}>{icon}</div>
               <div style={{ fontSize: '20px', fontWeight: 700, color, marginBottom: '4px' }}>{value}</div>
-              <div style={{ fontSize: '11px', color: '#4A5568' }}>{label}</div>
+              <div style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{label}</div>
             </div>
           ))}
         </div>
@@ -77,24 +77,24 @@ export default function ProfilePage() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
         {/* Activity Timeline */}
         <div className="card" style={{ padding: '20px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#E8EAF0', marginBottom: '16px' }}>Recent Activity</h3>
+          <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px' }}>Recent Activity</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
             {ACTIVITY_TIMELINE.map((item, i) => (
               <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', paddingBottom: '16px', position: 'relative' }}>
                 {i < ACTIVITY_TIMELINE.length - 1 && (
                   <div style={{
                     position: 'absolute', left: '8px', top: '18px', bottom: 0,
-                    width: '1px', background: '#1E2D4A',
+                    width: '1px', background: 'var(--border)',
                   }} />
                 )}
                 <div style={{
                   width: 16, height: 16, borderRadius: '50%', flexShrink: 0,
-                  background: '#00D4FF22', border: '2px solid #00D4FF44',
+                  background: '#3965FF22', border: '2px solid #3965FF44',
                   marginTop: '2px', zIndex: 1,
                 }} />
                 <div>
-                  <div style={{ fontSize: '13px', color: '#E8EAF0' }}>{item.action}</div>
-                  <div style={{ fontSize: '11px', color: '#4A5568', fontFamily: 'JetBrains Mono, monospace', marginTop: '2px' }}>{item.time}</div>
+                  <div style={{ fontSize: '13px', color: 'var(--text-primary)' }}>{item.action}</div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono, monospace', marginTop: '2px' }}>{item.time}</div>
                 </div>
               </div>
             ))}
@@ -103,13 +103,13 @@ export default function ProfilePage() {
 
         {/* Badges */}
         <div className="card" style={{ padding: '20px' }}>
-          <h3 style={{ fontSize: '15px', fontWeight: 700, color: '#E8EAF0', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Award size={16} color="#FFB800" /> Achievements
+          <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <Award size={16} color="#FFB547" /> Achievements
           </h3>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
             {BADGES.map(({ label, icon, color }) => (
               <div key={label} style={{
-                background: '#0D1220', border: `1px solid ${color}22`, borderRadius: '10px',
+                background: 'var(--bg-surface)', border: `1px solid ${color}22`, borderRadius: '10px',
                 padding: '14px', textAlign: 'center',
               }}>
                 <div style={{ fontSize: '28px', marginBottom: '8px' }}>{icon}</div>

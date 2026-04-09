@@ -103,9 +103,9 @@ export const DOMAIN_LABELS: Record<Domain, string> = {
 }
 
 export const DOMAIN_COLORS: Record<Domain, string> = {
-  http: '#00D4FF',
-  infra: '#8B5CF6',
-  auth: '#FF2D55',
+  http: '#3965FF',
+  infra: '#7551FF',
+  auth: '#EE5D50',
 }
 
 export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
@@ -118,12 +118,12 @@ export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
 }
 
 export const JOB_STATUS_COLORS: Record<JobStatus, string> = {
-  PENDING: '#6B7280',
-  FETCHING: '#00D4FF',
-  ANALYZING: '#FFB800',
-  REMEDIATING: '#8B5CF6',
-  COMPLETED: '#00FF88',
-  ERROR: '#FF2D55',
+  PENDING: '#A3AED0',
+  FETCHING: '#3965FF',
+  ANALYZING: '#FFB547',
+  REMEDIATING: '#7551FF',
+  COMPLETED: '#05CD99',
+  ERROR: '#EE5D50',
 }
 
 export const ACTION_TYPE_LABELS: Record<ActionType, string> = {
@@ -134,15 +134,16 @@ export const ACTION_TYPE_LABELS: Record<ActionType, string> = {
 }
 
 export const ACTION_STATUS_COLORS: Record<ActionStatus, string> = {
-  PENDING: '#6B7280',
-  IN_PROGRESS: '#FFB800',
-  DONE: '#00FF88',
-  FAILED: '#FF2D55',
+  PENDING: '#A3AED0',
+  IN_PROGRESS: '#FFB547',
+  DONE: '#05CD99',
+  FAILED: '#EE5D50',
 }
 
 export const SEV_COLORS: Record<Severity, { bg: string; color: string }> = {
-  critical: { bg: 'rgba(255,45,85,0.15)', color: '#FF2D55' },
-  high: { bg: 'rgba(255,184,0,0.15)', color: '#FFB800' },
-  medium: { bg: 'rgba(245,158,11,0.15)', color: '#F59E0B' },
-  low: { bg: 'rgba(0,212,255,0.15)', color: '#00D4FF' },
+  critical: { bg: 'rgba(227, 26, 26, 0.10)', color: '#E31A1A' },
+  high: { bg: 'rgba(255, 181, 71, 0.12)', color: '#E09B30' },
+  medium: { bg: 'rgba(117, 81, 255, 0.10)', color: '#7551FF' },
+  low: { bg: 'rgba(57, 101, 255, 0.08)', color: '#3965FF' },
 }
+

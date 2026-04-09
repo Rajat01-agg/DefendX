@@ -2,21 +2,21 @@ import { useEffect, useRef } from 'react'
 import type { LogEvent } from '../../data/mockData'
 
 const SEVERITY_COLORS: Record<string, string> = {
-  critical: '#FF2D55',
-  high: '#FFB800',
+  critical: '#EE5D50',
+  high: '#FFB547',
   medium: '#F59E0B',
-  low: '#00D4FF',
-  info: '#6B7280',
+  low: '#3965FF',
+  info: 'var(--text-secondary)',
 }
 
 const SOURCE_COLORS: Record<string, string> = {
   GRAFANA_LOKI: '#FF9900',
   WEBHOOK: '#EC4899',
-  EDR_AGENT: '#00D4FF',
-  VPC_FLOW: '#8B5CF6',
-  AUTH_SVC: '#FF2D55',
+  EDR_AGENT: '#3965FF',
+  VPC_FLOW: '#7551FF',
+  AUTH_SVC: '#EE5D50',
   FIREWALL: '#F59E0B',
-  SIEM: '#00FF88',
+  SIEM: '#05CD99',
 }
 
 interface TelemetryStreamProps {
@@ -38,7 +38,7 @@ export default function TelemetryStream({ logs, connected, sources }: TelemetryS
     <div
       style={{
         background: '#050810',
-        border: '1px solid #1E2D4A',
+        border: '1px solid var(--border)',
         borderRadius: '12px',
         display: 'flex',
         flexDirection: 'column',
@@ -49,7 +49,7 @@ export default function TelemetryStream({ logs, connected, sources }: TelemetryS
       {/* Terminal Header */}
       <div style={{
         padding: '10px 16px',
-        borderBottom: '1px solid #1E2D4A',
+        borderBottom: '1px solid var(--border)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
@@ -62,17 +62,17 @@ export default function TelemetryStream({ logs, connected, sources }: TelemetryS
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#FFBD2E', display: 'block' }} />
             <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#28C840', display: 'block' }} />
           </div>
-          <span style={{ fontSize: '11px', fontWeight: 700, color: '#9BA3B8', letterSpacing: '1.5px', fontFamily: 'JetBrains Mono, monospace' }}>
+          <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-muted)', letterSpacing: '1.5px', fontFamily: 'JetBrains Mono, monospace' }}>
             TELEMETRY INGESTION
           </span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
           <span style={{
             width: 7, height: 7, borderRadius: '50%',
-            background: connected ? '#00FF88' : '#FF2D55',
+            background: connected ? '#05CD99' : '#EE5D50',
             display: 'block',
           }} className={connected ? 'pulse-dot' : ''} />
-          <span style={{ fontSize: '10px', color: connected ? '#00FF88' : '#FF2D55', fontFamily: 'JetBrains Mono, monospace' }}>
+          <span style={{ fontSize: '10px', color: connected ? '#05CD99' : '#EE5D50', fontFamily: 'JetBrains Mono, monospace' }}>
             {connected ? '1.26GB/s' : 'CONNECTING...'}
           </span>
         </div>
@@ -96,9 +96,9 @@ export default function TelemetryStream({ logs, connected, sources }: TelemetryS
             className="fade-in-up"
             style={{ display: 'flex', gap: '8px', alignItems: 'flex-start', flexWrap: 'wrap' }}
           >
-            <span style={{ color: '#4A5568', flexShrink: 0 }}>{log.timestamp}</span>
+            <span style={{ color: 'var(--text-secondary)', flexShrink: 0 }}>{log.timestamp}</span>
             <span style={{
-              color: SOURCE_COLORS[log.source] ?? '#9BA3B8',
+              color: SOURCE_COLORS[log.source] ?? 'var(--text-muted)',
               flexShrink: 0,
               minWidth: '130px',
             }}>
@@ -109,7 +109,7 @@ export default function TelemetryStream({ logs, connected, sources }: TelemetryS
                 {log.severity.toUpperCase()}
               </span>
             ) : null}
-            <span style={{ color: log.severity === 'critical' ? '#FF8099' : '#9BA3B8', flex: 1, wordBreak: 'break-all' }}>
+            <span style={{ color: log.severity === 'critical' ? '#FF8099' : 'var(--text-muted)', flex: 1, wordBreak: 'break-all' }}>
               {log.message}
             </span>
           </div>
@@ -117,28 +117,28 @@ export default function TelemetryStream({ logs, connected, sources }: TelemetryS
         <div ref={bottomRef} />
         {/* Cursor */}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '4px' }}>
-          <span style={{ color: '#4A5568' }}>{'>'}</span>
-          <span style={{ display: 'inline-block', width: 8, height: 14, background: '#00D4FF', opacity: 0.8 }} className="blink" />
+          <span style={{ color: 'var(--text-secondary)' }}>{'>'}</span>
+          <span style={{ display: 'inline-block', width: 8, height: 14, background: '#3965FF', opacity: 0.8 }} className="blink" />
         </div>
       </div>
 
       {/* Footer */}
       <div style={{
         padding: '8px 16px',
-        borderTop: '1px solid #1E2D4A',
+        borderTop: '1px solid var(--border)',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
         background: '#080B14',
         flexShrink: 0,
       }}>
-        <span style={{ fontSize: '10px', color: '#4A5568', fontFamily: 'JetBrains Mono, monospace' }}>
-          SOURCES: <span style={{ color: '#9BA3B8' }}>{sources} ACTIVE</span>
+        <span style={{ fontSize: '10px', color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono, monospace' }}>
+          SOURCES: <span style={{ color: 'var(--text-muted)' }}>{sources} ACTIVE</span>
         </span>
         <span style={{
           fontSize: '10px',
           fontFamily: 'JetBrains Mono, monospace',
-          color: '#00D4FF',
+          color: '#3965FF',
           fontWeight: 600,
           letterSpacing: '1px',
         }}>

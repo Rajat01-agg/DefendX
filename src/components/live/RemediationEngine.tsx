@@ -54,14 +54,14 @@ const REMEDIATION_STATES: RemediationState[] = [
 ]
 
 export default function RemediationEngine() {
-  const [stateIdx, setStateIdx] = useState(0)
+  const [feed, setFeed] = useState<RemediationState[]>([REMEDIATION_STATES[0]])
+  const [nextIdx, setNextIdx] = useState(1)
   const [doneCount, setDoneCount] = useState(REMEDIATION_STATES[0].doneCount)
-  const current = REMEDIATION_STATES[stateIdx]
 
   const handleDownloadLog = () => {
     const logText = "--- DEFENDX REMEDIATION AUDIT LOG ---\n"
       + `Generated: ${new Date().toISOString()}\n\n`
-      + REMEDIATION_STATES.map(r => `[${r.findingId}] Domain: ${r.domain} | Action: ${r.actionType} | Status: ${r.actionStatus} | Target: ${r.offender}\n> ${r.description}\n`).join("\n");
+      + feed.map(r => `[${r.findingId}] Domain: ${r.domain} | Action: ${r.actionType} | Status: ${r.actionStatus} | Target: ${r.offender}\n> ${r.description}\n`).join("\n");
     const textContent = "data:text/plain;charset=utf-8," + encodeURIComponent(logText);
     const link = document.createElement("a");
     link.href = textContent;
@@ -71,14 +71,16 @@ export default function RemediationEngine() {
 
   useEffect(() => {
     const t = setInterval(() => {
-      setStateIdx(i => (i + 1) % REMEDIATION_STATES.length)
-    }, 10000)
+      setFeed(prev => [REMEDIATION_STATES[nextIdx], ...prev])
+      setNextIdx(i => (i + 1) % REMEDIATION_STATES.length)
+    }, 4000)
     return () => clearInterval(t)
-  }, [])
+  }, [nextIdx])
 
   useEffect(() => {
+    const current = feed[0]
     setDoneCount(current.doneCount)
-  }, [current])
+  }, [feed])
 
   useEffect(() => {
     const t = setInterval(() => {
@@ -87,127 +89,100 @@ export default function RemediationEngine() {
     return () => clearInterval(t)
   }, [])
 
-  const statusColor = ACTION_STATUS_COLORS[current.actionStatus]
-  const domainColor = DOMAIN_COLORS[current.domain]
-  const isDone = current.actionStatus === 'DONE'
+  const currentLoad = feed[0]?.load || '0.00%'
 
   return (
     <div style={{
       height: '100%',
       background: '#080B14',
-      border: '1px solid #1E2D4A',
+      border: '1px solid var(--border)',
       borderRadius: '12px',
-      padding: '20px 18px',
+      padding: '20px 16px',
       display: 'flex',
       flexDirection: 'column',
       gap: '14px',
       overflow: 'hidden',
     }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-        <Zap size={14} color="#00D4FF" />
-        <span style={{ fontSize: '11px', fontWeight: 700, color: '#9BA3B8', letterSpacing: '2px' }}>REMEDIATION ENGINE</span>
-        <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#4A5568', fontFamily: 'JetBrains Mono, monospace' }}>
-          ENGINE REV: 4.2.0
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+        <Zap size={14} color="#05CD99" />
+        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '2px' }}>REMEDIATION ENGINE</span>
+        <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono, monospace' }}>
+          LIVE FEED
         </span>
       </div>
 
-      {/* Status Banner */}
-      <div
-        className="fade-in-up"
-        style={{
-          background: isDone ? 'rgba(0,255,136,0.08)' : 'rgba(255,184,0,0.08)',
-          border: `1px solid ${isDone ? '#00FF8844' : '#FFB80044'}`,
-          borderRadius: '10px',
-          padding: '14px',
-          textAlign: 'center',
-        }}
-        key={stateIdx}
-      >
-        <div style={{
-          fontSize: '20px',
-          fontWeight: 800,
-          color: statusColor,
-          letterSpacing: '2px',
-          lineHeight: 1.2,
-        }}>
-          {current.actionStatus}
-        </div>
-        <div style={{ marginTop: '6px', display: 'flex', gap: '6px', justifyContent: 'center' }}>
-          <span style={{
-            padding: '2px 7px', borderRadius: '4px', fontSize: '9px', fontWeight: 700,
-            background: `${domainColor}18`, color: domainColor,
-          }}>
-            {current.domain.toUpperCase()}
-          </span>
-          <span style={{
-            padding: '2px 7px', borderRadius: '4px', fontSize: '9px', fontWeight: 600,
-            background: '#1E2D4A', color: '#9BA3B8',
-          }}>
-            {ACTION_TYPE_LABELS[current.actionType]}
-          </span>
-        </div>
-      </div>
-
-      {/* Quote */}
-      <div style={{ textAlign: 'center' }}>
-        <p style={{ fontSize: '11px', color: '#9BA3B8', fontStyle: 'italic', lineHeight: 1.5 }}>
-          {current.quote}
-        </p>
-      </div>
-
-      {/* Detail Report */}
-      <div style={{
-        background: '#0D1220',
-        border: '1px solid #1E2D4A',
-        borderRadius: '10px',
-        padding: '12px',
-        flex: 1,
-      }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-          <span style={{ fontSize: '11px', fontWeight: 600, color: '#6B7280', letterSpacing: '1px' }}>ACTION DETAILS</span>
-          <span style={{ fontSize: '10px', color: '#00D4FF', fontFamily: 'JetBrains Mono, monospace' }}>JUST NOW</span>
-        </div>
-        {[
-          { label: 'ActionType', value: ACTION_TYPE_LABELS[current.actionType] },
-          { label: 'Domain', value: DOMAIN_LABELS[current.domain] },
-          { label: 'Finding', value: current.findingId },
-          { label: 'Offender', value: current.offender },
-        ].map(({ label, value }) => (
-          <div key={label} style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'flex-start',
-            padding: '5px 0',
-            borderBottom: '1px solid #111827',
-          }}>
-            <span style={{ fontSize: '10px', color: '#4A5568', minWidth: 70 }}>{label}</span>
-            <span style={{ fontSize: '10px', color: '#E8EAF0', fontWeight: 500, textAlign: 'right', maxWidth: '150px', fontFamily: 'JetBrains Mono, monospace' }}>{value}</span>
-          </div>
-        ))}
-
-        <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Shield size={11} color="#00D4FF" />
-          <span style={{ fontSize: '9px', color: '#00D4FF', fontFamily: 'JetBrains Mono, monospace', fontWeight: 700 }}>
-            STATUS: {current.actionStatus}
-          </span>
-        </div>
-      </div>
-
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-        <div style={{ background: '#0D1220', border: '1px solid #1E2D4A', borderRadius: '8px', padding: '10px' }}>
-          <div style={{ fontSize: '9px', color: '#6B7280', letterSpacing: '1px', marginBottom: '4px' }}>ACTIONS COMPLETED</div>
-          <div style={{ fontSize: '22px', fontWeight: 700, color: '#E8EAF0', fontFamily: 'JetBrains Mono, monospace' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', flexShrink: 0 }}>
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px' }}>
+          <div style={{ fontSize: '9px', color: 'var(--text-secondary)', letterSpacing: '1px', marginBottom: '4px' }}>ACTIONS COMPLETED</div>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'JetBrains Mono, monospace' }}>
             {doneCount.toLocaleString()}
           </div>
         </div>
-        <div style={{ background: '#0D1220', border: '1px solid #1E2D4A', borderRadius: '8px', padding: '10px' }}>
-          <div style={{ fontSize: '9px', color: '#6B7280', letterSpacing: '1px', marginBottom: '4px' }}>SYSTEM LOAD</div>
-          <div style={{ fontSize: '22px', fontWeight: 700, color: '#00FF88', fontFamily: 'JetBrains Mono, monospace' }}>
-            {current.load}
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: '8px', padding: '10px' }}>
+          <div style={{ fontSize: '9px', color: 'var(--text-secondary)', letterSpacing: '1px', marginBottom: '4px' }}>SYSTEM LOAD</div>
+          <div style={{ fontSize: '18px', fontWeight: 700, color: '#05CD99', fontFamily: 'JetBrains Mono, monospace' }}>
+            {currentLoad}
           </div>
         </div>
+      </div>
+
+      <div style={{ width: '100%', height: '1px', background: 'var(--border)' }} />
+
+      {/* Feed */}
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1, overflowY: 'auto' }}>
+        {feed.map((item, idx) => {
+          const statusColor = ACTION_STATUS_COLORS[item.actionStatus]
+          const isDone = item.actionStatus === 'DONE'
+
+          return (
+            <div
+              key={idx}
+              className="fade-in-up"
+              style={{
+                background: 'var(--bg-surface)',
+                border: `1px solid ${statusColor}44`,
+                borderRadius: '12px',
+                padding: '12px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Shield size={11} color={statusColor} />
+                  <span style={{ fontSize: '10px', fontWeight: 700, color: statusColor, letterSpacing: '0.5px' }}>
+                    {ACTION_TYPE_LABELS[item.actionType]}
+                  </span>
+                </div>
+                <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>{item.findingId}</span>
+              </div>
+              
+              <div style={{ fontSize: '12px', color: 'var(--text-primary)', fontWeight: 500, lineHeight: 1.4 }}>
+                {item.description}
+              </div>
+
+              <div style={{ fontSize: '10px', color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono, monospace' }}>
+                Target: {item.offender}
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px' }}>
+                <span style={{
+                  padding: '2px 6px', borderRadius: '4px', fontSize: '8px', fontWeight: 700,
+                  background: isDone ? 'rgba(5,205,153,0.1)' : 'rgba(255,181,71,0.1)',
+                  color: isDone ? '#05CD99' : '#FFB547', letterSpacing: '0.5px'
+                }}>
+                  {item.actionStatus}
+                </span>
+                <span style={{ fontSize: '9px', color: '#3965FF', fontStyle: 'italic' }}>
+                  {item.quote.substring(0, 25)}...
+                </span>
+              </div>
+            </div>
+          )
+        })}
       </div>
 
       {/* Download button */}
@@ -216,10 +191,10 @@ export default function RemediationEngine() {
         style={{
         width: '100%',
         padding: '10px',
-        background: '#0D1220',
-        border: '1px solid #1E2D4A',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border)',
         borderRadius: '8px',
-        color: '#9BA3B8',
+        color: 'var(--text-muted)',
         fontSize: '11px',
         fontWeight: 600,
         letterSpacing: '1px',

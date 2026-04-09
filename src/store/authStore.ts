@@ -25,9 +25,12 @@ const MOCK_USER: User = {
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   user: null,
-  login: (_email: string, _password: string) => {
-    // Mock: any credentials work
-    set({ isAuthenticated: true, user: MOCK_USER })
+  login: (email: string, _password: string) => {
+    // Extract name from email to show instead of hardcoded 'Acme Corporation'
+    const nameStr = email.split('@')[0] || 'System Admin'
+    const formattedName = nameStr.charAt(0).toUpperCase() + nameStr.slice(1)
+    
+    set({ isAuthenticated: true, user: { ...MOCK_USER, name: formattedName, email } })
     return true
   },
   logout: () => {

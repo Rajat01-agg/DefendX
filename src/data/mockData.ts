@@ -1,5 +1,5 @@
 import type {
-  Job, Finding, Action, Report, GlobalStat, DomainStat, ActionType, Domain, Severity
+  Job, Finding, Action, Report, GlobalStat, Domain, Severity
 } from '../types/schema'
 
 // ── Global Stats (singleton) ──────────────────────────────────────────────

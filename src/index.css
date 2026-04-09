@@ -2,32 +2,43 @@
 
 /* ── DefendX Design Tokens ── */
 :root {
-  --bg-base: #070A12;
-  --bg-surface: #0D1220;
-  --bg-card: #111827;
-  --bg-elevated: #151E30;
-  --border: #1E2D4A;
-  --border-subtle: #162038;
+  /* Backgrounds: soft blue-grey tones for depth */
+  --bg-base: #F0F4F8;
+  --bg-surface: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F7F9FC;
+  --border: #E1E6EF;
+  --border-subtle: #EDF1F7;
 
-  --cyan: #00D4FF;
-  --cyan-dim: #00A8CC;
-  --cyan-glow: rgba(0, 212, 255, 0.15);
-  --red: #FF2D55;
-  --red-dim: #CC2244;
-  --red-glow: rgba(255, 45, 85, 0.15);
-  --green: #00FF88;
-  --green-dim: #00CC6A;
-  --green-glow: rgba(0, 255, 136, 0.12);
-  --amber: #FFB800;
-  --amber-dim: #CC9200;
-  --amber-glow: rgba(255, 184, 0, 0.12);
-  --purple: #8B5CF6;
-  --purple-glow: rgba(139, 92, 246, 0.15);
+  /* Primary brand: deep navy */
+  --navy: #1B2559;
+  --navy-light: #2B3674;
+  --navy-bg: #1B2559;
 
-  --text-primary: #E8EAF0;
-  --text-secondary: #9BA3B8;
-  --text-muted: #4A5568;
-  --text-accent: #00D4FF;
+  /* Accent blues */
+  --cyan: #3965FF;
+  --cyan-dim: #2B4EC6;
+  --cyan-glow: rgba(57, 101, 255, 0.10);
+
+  /* Semantic colors */
+  --red: #E31A1A;
+  --red-dim: #C41616;
+  --red-glow: rgba(227, 26, 26, 0.10);
+  --green: #05CD99;
+  --green-dim: #04A67C;
+  --green-glow: rgba(5, 205, 153, 0.10);
+  --amber: #FFB547;
+  --amber-dim: #E09B30;
+  --amber-glow: rgba(255, 181, 71, 0.10);
+  --purple: #7551FF;
+  --purple-glow: rgba(117, 81, 255, 0.10);
+  --orange: #EE5D50;
+
+  /* Text */
+  --text-primary: #1B2559;
+  --text-secondary: #707EAE;
+  --text-muted: #A3AED0;
+  --text-accent: #3965FF;
 }
 
 /* ── Base Reset ── */
@@ -44,7 +55,7 @@ html {
 }
 
 body {
-  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-family: 'DM Sans', 'Inter', system-ui, sans-serif;
   background-color: var(--bg-base);
   color: var(--text-primary);
   min-height: 100vh;
@@ -66,45 +77,43 @@ body {
   height: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: var(--bg-surface);
+  background: var(--bg-base);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--cyan-dim);
+  background: var(--text-muted);
 }
 
-/* ── Custom Glows & Shadows ── */
+/* ── Custom Shadows ── */
 .glow-cyan {
-  box-shadow: 0 0 20px var(--cyan-glow), 0 0 40px rgba(0, 212, 255, 0.05);
+  box-shadow: 0 4px 24px var(--cyan-glow);
 }
 .glow-red {
-  box-shadow: 0 0 20px var(--red-glow), 0 0 40px rgba(255, 45, 85, 0.05);
+  box-shadow: 0 4px 24px var(--red-glow);
 }
 .glow-green {
-  box-shadow: 0 0 20px var(--green-glow);
+  box-shadow: 0 4px 24px var(--green-glow);
 }
 .glow-amber {
-  box-shadow: 0 0 20px var(--amber-glow);
+  box-shadow: 0 4px 24px var(--amber-glow);
 }
 .text-glow-cyan {
-  text-shadow: 0 0 20px rgba(0, 212, 255, 0.5);
+  text-shadow: none;
 }
 .text-glow-red {
-  text-shadow: 0 0 20px rgba(255, 45, 85, 0.5);
+  text-shadow: none;
 }
 
 /* ── Grid background pattern ── */
 .grid-bg {
-  background-image:
-    linear-gradient(rgba(0, 212, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0, 212, 255, 0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-image: radial-gradient(rgba(57, 101, 255, 0.25) 1.5px, transparent 1.5px);
+  background-size: 32px 32px;
 }
 
-/* ── Animated scan line ── */
+/* ── Animated scan line (very subtle for light) ── */
 @keyframes scanline {
   0% { transform: translateY(-100%); }
   100% { transform: translateY(100vh); }
@@ -115,8 +124,8 @@ body {
   top: 0;
   left: 0;
   right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(57, 101, 255, 0.08), transparent);
   animation: scanline 8s linear infinite;
   pointer-events: none;
   z-index: 9999;
@@ -141,7 +150,7 @@ body {
   animation: blink 1s step-end infinite;
 }
 
-/* ── Number counter shimmer ── */
+/* ── Shimmer ── */
 @keyframes shimmer {
   0% { background-position: -200px 0; }
   100% { background-position: calc(200px + 100%) 0; }
@@ -151,7 +160,7 @@ body {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -159,7 +168,7 @@ body {
   }
 }
 .fade-in-up {
-  animation: fadeInUp 0.5s ease forwards;
+  animation: fadeInUp 0.4s ease forwards;
 }
 
 /* ── Terminal text streaming ── */
@@ -176,7 +185,7 @@ body {
 /* ── Status badge ── */
 .status-critical { color: var(--red); }
 .status-high { color: var(--amber); }
-.status-medium { color: #F59E0B; }
+.status-medium { color: var(--amber-dim); }
 .status-low { color: var(--cyan); }
 .status-safe { color: var(--green); }
 
@@ -184,27 +193,27 @@ body {
 .card {
   background: var(--bg-card);
   border: 1px solid var(--border);
-  border-radius: 12px;
+  border-radius: 16px;
   position: relative;
   overflow: hidden;
+  box-shadow: 0 2px 12px rgba(27, 37, 89, 0.04), 0 1px 3px rgba(27, 37, 89, 0.02);
 }
 
 .card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(0, 212, 255, 0.3), transparent);
+  content: none;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(27, 37, 89, 0.08), 0 2px 6px rgba(27, 37, 89, 0.03);
 }
 
 /* ── Glassmorphism ── */
 .glass {
-  background: rgba(13, 18, 32, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(30, 45, 74, 0.6);
+  background: rgba(255, 255, 255, 0.90);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border);
+  box-shadow: 0 4px 12px rgba(27, 37, 89, 0.04);
 }
 
 /* ── Transition defaults ── */
@@ -216,8 +225,8 @@ body {
 
 /* ── Emergency button pulsing ── */
 @keyframes emergency-pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 45, 85, 0.4); }
-  50% { box-shadow: 0 0 0 8px rgba(255, 45, 85, 0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(227, 26, 26, 0.3); }
+  50% { box-shadow: 0 0 0 6px rgba(227, 26, 26, 0); }
 }
 .emergency-pulse {
   animation: emergency-pulse 2s ease-in-out infinite;

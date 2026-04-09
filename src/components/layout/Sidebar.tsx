@@ -33,8 +33,7 @@ export default function Sidebar() {
       style={{
         width: '220px',
         minHeight: '100vh',
-        background: '#0A0F1E',
-        borderRight: '1px solid #1E2D4A',
+        background: 'linear-gradient(180deg, #1B2559 0%, #111C44 100%)',
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
@@ -45,39 +44,39 @@ export default function Sidebar() {
       }}
     >
       {/* Logo */}
-      <div style={{ padding: '20px 16px 16px', borderBottom: '1px solid #1E2D4A' }}>
+      <div style={{ padding: '22px 16px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
           <div style={{
             width: 36, height: 36, borderRadius: '10px',
-            background: 'linear-gradient(135deg, #00D4FF22, #00D4FF44)',
-            border: '1px solid #00D4FF44',
+            background: 'rgba(57, 101, 255, 0.25)',
+            border: '1px solid rgba(57, 101, 255, 0.4)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>
-            <Shield size={18} color="#00D4FF" />
+            <Shield size={18} color="#fff" />
           </div>
-          <span style={{ fontSize: '18px', fontWeight: 700, color: '#E8EAF0', letterSpacing: '-0.3px' }}>
-            Defend<span style={{ color: '#00D4FF' }}>X</span>
+          <span style={{ fontSize: '18px', fontWeight: 700, color: '#fff', letterSpacing: '-0.3px' }}>
+            Defend<span style={{ color: '#3965FF' }}>X</span>
           </span>
         </div>
-        <div style={{ fontSize: '10px', color: '#4A5568', letterSpacing: '1px', paddingLeft: '46px' }}>
-          ENTERPRISE DEFENSE
+        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.45)', letterSpacing: '1px', paddingLeft: '46px' }}>
+          ENTERPRISE SOC
         </div>
       </div>
 
       {/* User Card */}
-      <div style={{ padding: '14px 16px', borderBottom: '1px solid #1E2D4A' }}>
+      <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
             width: 36, height: 36, borderRadius: '50%',
-            background: 'linear-gradient(135deg, #00D4FF, #8B5CF6)',
+            background: 'linear-gradient(135deg, #3965FF, #7551FF)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '14px', fontWeight: 700, color: '#fff', flexShrink: 0,
+            fontSize: '13px', fontWeight: 700, color: '#fff', flexShrink: 0,
           }}>
             {user?.name?.substring(0, 2).toUpperCase() || 'AC'}
           </div>
           <div>
-            <div style={{ fontSize: '13px', fontWeight: 600, color: '#E8EAF0' }}>{user?.name || 'Administrator'}</div>
-            <div style={{ fontSize: '10px', color: '#00D4FF', letterSpacing: '0.5px' }}>{user?.clearance || 'SYSTEM ACCESS'}</div>
+            <div style={{ fontSize: '13px', fontWeight: 600, color: '#fff' }}>{user?.name || 'Administrator'}</div>
+            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', letterSpacing: '0.5px' }}>{user?.clearance || 'SYSTEM ACCESS'}</div>
           </div>
         </div>
       </div>
@@ -93,13 +92,12 @@ export default function Sidebar() {
               alignItems: 'center',
               gap: '10px',
               padding: '10px 12px',
-              borderRadius: '8px',
+              borderRadius: '10px',
               textDecoration: 'none',
               fontSize: '13px',
               fontWeight: isActive ? 600 : 400,
-              color: isActive ? '#00D4FF' : '#6B7280',
-              background: isActive ? 'rgba(0, 212, 255, 0.08)' : 'transparent',
-              borderLeft: isActive ? '2px solid #00D4FF' : '2px solid transparent',
+              color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+              background: isActive ? 'rgba(57, 101, 255, 0.3)' : 'transparent',
               transition: 'all 0.15s ease',
             })}
           >
@@ -114,10 +112,10 @@ export default function Sidebar() {
             style={{
               width: '100%',
               padding: '10px 12px',
-              borderRadius: '8px',
-              border: '1px solid #FF2D5544',
-              background: 'rgba(255, 45, 85, 0.08)',
-              color: '#FF2D55',
+              borderRadius: '10px',
+              border: '1px solid rgba(238, 93, 80, 0.35)',
+              background: 'rgba(238, 93, 80, 0.12)',
+              color: '#EE5D50',
               fontSize: '11px',
               fontWeight: 700,
               letterSpacing: '1px',
@@ -129,24 +127,24 @@ export default function Sidebar() {
             className="emergency-pulse"
           >
             <AlertTriangle size={14} />
-            EMERGENCY PROTOCOL
+            EMERGENCY
           </button>
         </div>
 
-        <div style={{ marginTop: '12px', padding: '10px 12px', borderRadius: '8px', background: 'rgba(0,255,136,0.05)', border: '1px solid rgba(0,255,136,0.1)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-            <Zap size={12} color="#00FF88" />
-            <span style={{ fontSize: '10px', color: '#00FF88', letterSpacing: '0.5px', fontWeight: 600 }}>SYSTEM STATUS</span>
+        <div style={{ marginTop: '12px', padding: '10px 12px', borderRadius: '10px', background: 'rgba(5, 205, 153, 0.1)', border: '1px solid rgba(5, 205, 153, 0.15)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+            <Zap size={12} color="#05CD99" />
+            <span style={{ fontSize: '10px', color: '#05CD99', letterSpacing: '0.5px', fontWeight: 600 }}>SYSTEM STATUS</span>
           </div>
-          <div style={{ fontSize: '11px', color: '#6B7280' }}>All systems operational</div>
-          <div style={{ marginTop: '6px', height: '3px', borderRadius: '2px', background: '#1E2D4A', overflow: 'hidden' }}>
-            <div style={{ width: '98%', height: '100%', background: 'linear-gradient(90deg, #00FF88, #00D4FF)', borderRadius: '2px' }} />
+          <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)' }}>All systems operational</div>
+          <div style={{ marginTop: '6px', height: '3px', borderRadius: '2px', background: 'rgba(255,255,255,0.08)', overflow: 'hidden' }}>
+            <div style={{ width: '98%', height: '100%', background: 'linear-gradient(90deg, #05CD99, #3965FF)', borderRadius: '2px' }} />
           </div>
         </div>
       </nav>
 
       {/* Bottom Items */}
-      <div style={{ padding: '10px', borderTop: '1px solid #1E2D4A' }}>
+      <div style={{ padding: '10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
         {bottomItems.map(({ to, icon: Icon, label }) => (
           <NavLink
             key={to}
@@ -156,12 +154,12 @@ export default function Sidebar() {
               alignItems: 'center',
               gap: '10px',
               padding: '9px 12px',
-              borderRadius: '8px',
+              borderRadius: '10px',
               textDecoration: 'none',
               fontSize: '13px',
               fontWeight: isActive ? 600 : 400,
-              color: isActive ? '#00D4FF' : '#6B7280',
-              background: isActive ? 'rgba(0, 212, 255, 0.08)' : 'transparent',
+              color: isActive ? '#fff' : 'rgba(255,255,255,0.55)',
+              background: isActive ? 'rgba(57, 101, 255, 0.3)' : 'transparent',
               marginBottom: '2px',
             })}
           >
@@ -177,10 +175,10 @@ export default function Sidebar() {
             alignItems: 'center',
             gap: '10px',
             padding: '9px 12px',
-            borderRadius: '8px',
+            borderRadius: '10px',
             border: 'none',
             background: 'transparent',
-            color: '#6B7280',
+            color: 'rgba(255,255,255,0.4)',
             fontSize: '13px',
             cursor: 'pointer',
             textAlign: 'left',
@@ -194,45 +192,43 @@ export default function Sidebar() {
       {showEmergency && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-          background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)',
+          background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           zIndex: 9999,
         }}>
           <div style={{
-            background: '#070A12', border: '1px solid #FF2D55', borderRadius: '16px',
-            padding: '40px', width: '100%', maxWidth: '500px', textAlign: 'center',
-            boxShadow: '0 0 50px rgba(255,45,85,0.2)',
+            background: '#fff', border: '2px solid #EE5D50', borderRadius: '20px',
+            padding: '40px', width: '100%', maxWidth: '460px', textAlign: 'center',
+            boxShadow: '0 20px 60px rgba(238,93,80,0.15)',
           }}>
-            <AlertTriangle size={64} color="#FF2D55" style={{ marginBottom: '20px' }} />
-            <h2 style={{ fontSize: '22px', fontWeight: 800, color: '#fff', marginBottom: '16px', letterSpacing: '1px' }}>
+            <AlertTriangle size={56} color="#EE5D50" style={{ marginBottom: '16px' }} />
+            <h2 style={{ fontSize: '20px', fontWeight: 800, color: '#1B2559', marginBottom: '12px', letterSpacing: '0.5px' }}>
               INITIATE GLOBAL LOCKDOWN?
             </h2>
-            <p style={{ fontSize: '14px', color: '#9BA3B8', marginBottom: '32px', lineHeight: 1.6 }}>
-              Activating the emergency protocol will immediately quarantine all internal network traffic, 
-              sever all external API connections, and force-logout all active users to prevent lateral movement. 
-              This action cannot be reversed without physical site authorization.
+            <p style={{ fontSize: '14px', color: '#707EAE', marginBottom: '28px', lineHeight: 1.6 }}>
+              This will immediately quarantine all network traffic, sever external API connections, and force-logout users. 
+              This action requires physical site authorization to reverse.
             </p>
-            <div style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
               <button 
                 onClick={() => setShowEmergency(false)}
                 style={{
-                  padding: '12px 24px', borderRadius: '8px', background: 'transparent',
-                  border: '1px solid #1E2D4A', color: '#E8EAF0', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
+                  padding: '12px 24px', borderRadius: '10px', background: '#F0F4F8',
+                  border: '1px solid var(--border)', color: '#1B2559', fontSize: '13px', fontWeight: 600, cursor: 'pointer',
                   flex: 1,
                 }}>
                 CANCEL
               </button>
               <button 
                 onClick={() => {
-                  alert("SECURITY PROTOCOL OMEGA INITIATED. SEVERING ALL CONNECTIONS.");
+                  alert("SECURITY PROTOCOL OMEGA INITIATED.");
                   setShowEmergency(false);
                 }}
                 style={{
-                  padding: '12px 24px', borderRadius: '8px', background: 'rgba(255, 45, 85, 0.1)',
-                  border: '1px solid #FF2D55', color: '#FF2D55', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
-                  boxShadow: '0 0 20px rgba(255,45,85,0.3)', flex: 1,
+                  padding: '12px 24px', borderRadius: '10px', background: '#EE5D50',
+                  border: 'none', color: '#fff', fontSize: '13px', fontWeight: 700, cursor: 'pointer',
+                  boxShadow: '0 4px 16px rgba(238,93,80,0.3)', flex: 1,
                 }}
-                className="emergency-pulse"
               >
                 CONFIRM LOCKDOWN
               </button>
