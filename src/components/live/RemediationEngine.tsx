@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Download, Shield, Zap } from 'lucide-react'
 import type { ActionType, ActionStatus, Domain } from '../../types/schema'
-import { ACTION_TYPE_LABELS, DOMAIN_LABELS, ACTION_STATUS_COLORS, DOMAIN_COLORS } from '../../types/schema'
+import { ACTION_TYPE_LABELS, ACTION_STATUS_COLORS } from '../../types/schema'
 
 interface RemediationState {
   actionType: ActionType
@@ -79,6 +79,7 @@ export default function RemediationEngine() {
 
   useEffect(() => {
     const current = feed[0]
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDoneCount(current.doneCount)
   }, [feed])
 

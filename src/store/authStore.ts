@@ -25,6 +25,7 @@ const MOCK_USER: User = {
 export const useAuthStore = create<AuthState>((set) => ({
   isAuthenticated: false,
   user: null,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   login: (email: string, _password: string) => {
     // Extract name from email to show instead of hardcoded 'Acme Corporation'
     const nameStr = email.split('@')[0] || 'System Admin'

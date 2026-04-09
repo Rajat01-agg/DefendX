@@ -4,6 +4,7 @@ import {
 } from 'recharts'
 import { mockChartData } from '../../data/mockData'
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (!active || !payload?.length) return null
   return (
@@ -16,6 +17,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       boxShadow: '0 4px 12px rgba(27,37,89,0.08)',
     }}>
       <p style={{ color: 'var(--text-muted)', marginBottom: '6px', fontFamily: 'JetBrains Mono, monospace' }}>{label}</p>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {payload.map((p: any) => (
         <p key={p.dataKey} style={{ color: p.color, marginBottom: '2px' }}>
           {p.name}: <strong>{p.value.toLocaleString()}</strong>
