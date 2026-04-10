@@ -66,6 +66,8 @@ export interface Action {
   status: ActionStatus
   completedAt?: string
   createdAt: string
+  job: { jobId: string; status: JobStatus }
+  finding?: Finding
 }
 
 export interface Report {
@@ -74,6 +76,7 @@ export interface Report {
   jsonReport: object               // full AgentOutput
   humanReport: string              // SOC markdown
   createdAt: string
+  job: Job
 }
 
 export interface DomainStat {
@@ -83,6 +86,7 @@ export interface DomainStat {
   logsProcessed: number
   findingsCount: number
   actionsCount: number
+  job: Job
 }
 
 export interface GlobalStat {

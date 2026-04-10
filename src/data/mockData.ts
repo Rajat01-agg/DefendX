@@ -22,7 +22,8 @@ export const mockFindings: Finding[] = [
     context: { service: 'api-gateway', app: 'user-query-svc', environment: 'production' },
     offender: { type: 'ip', value: '185.220.101.45' },
     metrics: { event_count: 34, unique_targets: 2, success_count: 0, failure_count: 34 },
-    timeWindowFrom: Date.now() - 3600_000, timeWindowTo: Date.now(),
+    timeWindowFrom: BigInt(Date.now() - 3600_000),
+  timeWindowTo: BigInt(Date.now()),
     evidenceSamples: [
       'POST /api/v2/query body contains UNION SELECT',
       'Repeated payload obfuscation attempts detected',
@@ -37,7 +38,7 @@ export const mockFindings: Finding[] = [
     context: { service: 'payment-gateway', app: 'payment-router', environment: 'production' },
     offender: { type: 'ip', value: '103.45.xx.xx' },
     metrics: { event_count: 450000, unique_targets: 3, success_count: 0, failure_count: 450000 },
-    timeWindowFrom: Date.now() - 7200_000, timeWindowTo: Date.now(),
+    timeWindowFrom: BigInt(Date.now() - 7200_000), timeWindowTo: BigInt(Date.now()),
     evidenceSamples: [
       'UDP flood rate: 450k pps from 847 unique source IPs',
       'Botnet C2 signature matched against threat feed',
@@ -52,7 +53,7 @@ export const mockFindings: Finding[] = [
     context: { service: 'iam-auth', app: 'iam-auth', environment: 'production' },
     offender: { type: 'ip', value: '103.4xx.xx.x' },
     metrics: { event_count: 127, unique_targets: 5, success_count: 0, failure_count: 127 },
-    timeWindowFrom: Date.now() - 5400_000, timeWindowTo: Date.now(),
+    timeWindowFrom: BigInt(Date.now() - 5400_000), timeWindowTo: BigInt(Date.now()),
     evidenceSamples: [
       'auth_fail user="root" ip=103.4xx.xx.x attempts=42',
       'auth_fail user="admin" ip=103.4xx.xx.x attempts=85',

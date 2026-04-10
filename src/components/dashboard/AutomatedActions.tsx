@@ -1,6 +1,10 @@
-import { mockActions } from '../../data/mockData'
+import type { Action } from '../../types/schema'
 import { ACTION_TYPE_LABELS, ACTION_STATUS_COLORS, DOMAIN_COLORS } from '../../types/schema'
 import { CheckCircle, AlertTriangle, Clock, Loader } from 'lucide-react'
+
+interface AutomatedActionsProps {
+  actions: Action[]
+}
 
 const STATUS_ICONS = {
   PENDING: Clock,
@@ -16,7 +20,7 @@ const ACTION_EMOJI: Record<string, string> = {
   manual_review: '👁️',
 }
 
-export default function AutomatedActions() {
+export default function AutomatedActions({ actions }: AutomatedActionsProps) {
   return (
     <div className="card" style={{ padding: '20px', height: '100%' }}>
       <div style={{ marginBottom: '16px' }}>
@@ -25,7 +29,7 @@ export default function AutomatedActions() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {mockActions.slice(0, 5).map(action => {
+        {actions.slice(0, 5).map(action => {
           const statusColor = ACTION_STATUS_COLORS[action.status]
           const StatusIcon = STATUS_ICONS[action.status]
           const domainColor = DOMAIN_COLORS[action.domain]
