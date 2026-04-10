@@ -1,9 +1,10 @@
-import { useState, useCallback } from 'react'
-import { useMockWebSocket } from '../hooks/useMockWebSocket'
+import { useState, useCallback, useMemo } from 'react'
+import { useWebSocket } from '../hooks/useWebSocket'
 import TelemetryStream from '../components/live/TelemetryStream'
 import CommanderAgent from '../components/live/CommanderAgent'
 import RemediationEngine from '../components/live/RemediationEngine'
-import { mockGlobalStat } from '../data/mockData'
+import { mockGlobalStat, type LogEvent } from '../data/mockData'
+import { apiClient } from '../api/client'
 import { Play, Square, ChevronDown, Clock, Timer, Zap, Activity, Settings2 } from 'lucide-react'
 
 const TIME_PRESETS = [
@@ -26,7 +27,37 @@ const STATUS_BAR = [
 ]
 
 export default function LiveActivityPage() {
-  const { logs, connected, sources } = useMockWebSocket()
+  const { connected, messages } = useWebSocket()
+
+  const liveLogs = useMemo<LogEvent[]>(() => {
+    return messages.map((message, index) => {
+      const timestamp = new Date(message.timestamp).toLocaleTimeString('en-US', {
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+      })
+
+      const domain = message.payload?.domain as string | undefined
+      let source: 'GRAFANA_LOKI' | 'WEBHOOK' | 'EDR_AGENT' | 'VPC_FLOW' | 'AUTH_SVC' | 'FIREWALL' | 'SIEM' = 'SIEM'
+      
+      if (domain === 'auth') source = 'AUTH_SVC'
+      else if (domain === 'http') source = 'GRAFANA_LOKI'
+      else if (domain === 'infra') source = 'FIREWALL'
+
+      const payloadText = typeof message.payload === 'object'
+        ? JSON.stringify(message.payload)
+        : String(message.payload)
+
+      return {
+        id: `${message.jobId}-${index}`,
+        timestamp: `[${timestamp}]`,
+        source,
+        severity: 'info' as const,
+        message: `${message.state} • ${payloadText}`,
+      }
+    })
+  }, [messages])
 
   // Audit control state
   const [showAuditPanel, setShowAuditPanel] = useState(false)
@@ -36,27 +67,33 @@ export default function LiveActivityPage() {
   const [auditElapsed, setAuditElapsed] = useState(0)
   const [auditTimerId, setAuditTimerId] = useState<ReturnType<typeof setInterval> | null>(null)
 
-  const handleStartAudit = useCallback(() => {
+  const handleStartAudit = useCallback(async () => {
     const minutes = customMinutes ? parseInt(customMinutes, 10) : selectedMinutes
     if (!minutes || minutes <= 0) return
 
-    setAuditRunning(true)
-    setAuditElapsed(0)
-    setShowAuditPanel(false)
+    try {
+      await apiClient.triggerJob(minutes)
+      setAuditRunning(true)
+      setAuditElapsed(0)
+      setShowAuditPanel(false)
 
-    // Tick every second to show elapsed time
-    const id = setInterval(() => {
-      setAuditElapsed(prev => {
-        const next = prev + 1
-        if (next >= minutes * 60) {
-          clearInterval(id)
-          setAuditRunning(false)
-          return 0
-        }
-        return next
-      })
-    }, 1000)
-    setAuditTimerId(id)
+      // Tick every second to show elapsed time
+      const id = setInterval(() => {
+        setAuditElapsed(prev => {
+          const next = prev + 1
+          if (next >= minutes * 60) {
+            clearInterval(id)
+            setAuditRunning(false)
+            return 0
+          }
+          return next
+        })
+      }, 1000)
+      setAuditTimerId(id)
+    } catch (error) {
+      console.error('Failed to trigger job:', error)
+      // Handle error, maybe show a toast
+    }
   }, [selectedMinutes, customMinutes])
 
   const handleStopAudit = useCallback(() => {
@@ -290,7 +327,7 @@ export default function LiveActivityPage() {
         minHeight: 0,
       }}>
         {/* Left: Telemetry Stream */}
-        <TelemetryStream logs={logs} connected={connected} sources={sources} />
+        <TelemetryStream logs={liveLogs} connected={connected} sources={liveLogs.length || 1} />
 
         {/* Center: Commander Agent */}
         <CommanderAgent />

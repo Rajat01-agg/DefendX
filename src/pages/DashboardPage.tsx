@@ -2,30 +2,59 @@ import AttackVolumeChart from '../components/charts/AttackVolumeChart'
 import FindingsFeed from '../components/dashboard/IncidentFeed'
 import AutomatedActions from '../components/dashboard/AutomatedActions'
 import PortalStatusTable from '../components/dashboard/PortalStatusTable'
-import { mockGlobalStat, aggregatedDomainStats, mockJobs, mockFindings } from '../data/mockData'
-import { DOMAIN_LABELS, DOMAIN_COLORS, JOB_STATUS_COLORS, JOB_STATUS_LABELS } from '../types/schema'
+import { apiClient } from '../api/client'
+import { DOMAIN_LABELS, DOMAIN_COLORS, JOB_STATUS_COLORS, JOB_STATUS_LABELS, type GlobalStat, type DomainStat, type Job } from '../types/schema'
 import type { Domain } from '../types/schema'
 import { TrendingUp, AlertTriangle, CheckCircle, Clock, Layers, ShieldCheck, BarChart3 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
+import { useEffect, useState } from 'react'
 
 export default function DashboardPage() {
-  const g = mockGlobalStat
-  const critActive = mockFindings.filter(f => f.severity === 'critical').length
-  const highActive = mockFindings.filter(f => f.severity === 'high').length
+  const [globalStat, setGlobalStat] = useState<GlobalStat | null>(null)
+  const [domainBreakdown, setDomainBreakdown] = useState<DomainStat[]>([])
+  const [recentJobs, setRecentJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const data = await apiClient.getDashboard()
+        setGlobalStat(data.globalStat)
+        setDomainBreakdown(data.domainBreakdown)
+        setRecentJobs(data.recentJobs)
+      } catch (error) {
+        console.error('Failed to fetch dashboard:', error)
+        // Fallback to mock data if API fails
+        // For now, keep as is
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchDashboard()
+  }, [])
+
+  if (loading || !globalStat) {
+    return <div>Loading...</div>
+  }
+
+  const g = globalStat
+  const critActive = recentJobs.flatMap(j => j.findings).filter(f => f.severity === 'critical').length
+  const highActive = recentJobs.flatMap(j => j.findings).filter(f => f.severity === 'high').length
 
   // Domain pie data
   const domainPieData = (['http', 'auth', 'infra'] as Domain[]).map(d => ({
     name: DOMAIN_LABELS[d],
-    value: aggregatedDomainStats[d].findingsCount,
+    value: domainBreakdown.find(db => db.domain === d)?.findingsCount || 0,
     color: DOMAIN_COLORS[d],
   }))
 
   // Severity breakdown for card
+  const allFindings = recentJobs.flatMap(j => j.findings)
   const sevBreakdown = [
     { label: 'Critical', count: critActive, color: '#E31A1A' },
     { label: 'High', count: highActive, color: '#E09B30' },
-    { label: 'Medium', count: mockFindings.filter(f => f.severity === 'medium').length, color: '#7551FF' },
-    { label: 'Low', count: mockFindings.filter(f => f.severity === 'low').length, color: '#3965FF' },
+    { label: 'Medium', count: allFindings.filter(f => f.severity === 'medium').length, color: '#7551FF' },
+    { label: 'Low', count: allFindings.filter(f => f.severity === 'low').length, color: '#3965FF' },
   ]
 
   return (
@@ -91,7 +120,7 @@ export default function DashboardPage() {
       {/* Chart + Live Incident Feed */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '20px' }}>
         <AttackVolumeChart />
-        <FindingsFeed />
+        <FindingsFeed findings={allFindings} />
       </div>
 
       {/* Portal Status + Threat Domain Breakdown */}
@@ -154,7 +183,7 @@ export default function DashboardPage() {
 
       {/* Recent Actions + Recent Jobs */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        <AutomatedActions />
+        <AutomatedActions actions={recentJobs.flatMap(j => j.actions)} />
 
         <div className="card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>

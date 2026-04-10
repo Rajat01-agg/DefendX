@@ -1,9 +1,13 @@
-import { mockFindings } from '../../data/mockData'
+import type { Finding } from '../../types/schema'
 import { SEV_COLORS, DOMAIN_COLORS } from '../../types/schema'
 import { Clock } from 'lucide-react'
 
-export default function FindingsFeed() {
-  const feed = mockFindings.slice(0, 5)
+interface FindingsFeedProps {
+  findings: Finding[]
+}
+
+export default function FindingsFeed({ findings }: FindingsFeedProps) {
+  const feed = findings.slice(0, 5)
 
   return (
     <div className="card" style={{ padding: '20px', height: '100%' }}>
