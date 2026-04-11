@@ -268,15 +268,6 @@ export default function LiveActivityPage() {
 
       {/* ─── Audit Control Bar ─── */}
       <div style={{ marginBottom: '12px', flexShrink: 0 }}>
-        {socketState !== 'connected' && socketState !== 'completed' && !finalJobSnapshot && (
-          <div className="card" style={{ padding: '10px 14px', marginBottom: '10px', borderLeft: '3px solid #FFB547' }}>
-            <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
-              Live stream status: <span style={{ fontWeight: 700, color: '#FFB547' }}>{socketState.toUpperCase()}</span>
-              {reconnectAttempt > 0 ? ` (retry ${reconnectAttempt})` : ''}
-              {activeJobId ? ' - fallback polling is active for this job while disconnected.' : ''}
-            </div>
-          </div>
-        )}
         <div className="card" style={{
           padding: '0',
           borderRadius: '14px',
@@ -316,34 +307,24 @@ export default function LiveActivityPage() {
 
             {/* Running status / progress */}
             {auditRunning && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', flex: 1, padding: '0 20px' }}>
-                {/* Time elapsed */}
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '6px 12px', borderRadius: '8px', background: '#F7F9FC',
-                }}>
-                  <Timer size={13} color="#3965FF" />
-                  <span style={{ fontSize: '13px', fontWeight: 700, fontFamily: 'JetBrains Mono, monospace', color: '#3965FF' }}>
-                    {String(elapsedMin).padStart(2, '0')}:{String(elapsedSec).padStart(2, '0')}
-                  </span>
-                  <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                    / {customMinutes || selectedMinutes}:00
-                  </span>
-                </div>
-
-                {/* Progress bar */}
-                <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: '#F0F4F8', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', flex: 1, padding: '0 20px' }}>
+                {/* Indeterminate progress bar */}
+                <div style={{ flex: 1, height: '6px', borderRadius: '3px', background: '#F0F4F8', overflow: 'hidden', position: 'relative' }}>
                   <div style={{
-                    width: `${progressPct}%`, height: '100%', borderRadius: '3px',
+                    width: '30%', height: '100%', borderRadius: '3px',
                     background: 'linear-gradient(90deg, #3965FF, #05CD99)',
-                    transition: 'width 1s linear',
+                    position: 'absolute',
+                    animation: 'marquee 1.5s infinite linear',
                   }} />
+                  <style>
+                    {`
+                      @keyframes marquee {
+                        0% { left: -30%; }
+                        100% { left: 100%; }
+                      }
+                    `}
+                  </style>
                 </div>
-
-                {/* Percentage */}
-                <span style={{ fontSize: '12px', fontWeight: 600, color: '#05CD99', fontFamily: 'JetBrains Mono, monospace', minWidth: '40px' }}>
-                  {progressPct.toFixed(1)}%
-                </span>
               </div>
             )}
 

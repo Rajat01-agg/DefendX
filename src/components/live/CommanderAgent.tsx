@@ -163,8 +163,8 @@ export default function CommanderAgent({ findings = [], revealDelayMs = 1400 }: 
         </div>
 
         <div>
-          <div style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '1px' }}>COMMANDER AGENT</div>
-          <div style={{ fontSize: '10px', color: '#3965FF', letterSpacing: '1.5px', marginTop: '2px' }}>AUTONOMOUS TRIAGE LIVE STREAM</div>
+          <div style={{ fontSize: '15px', fontWeight: 700, color: '#A0AEC0', letterSpacing: '1px' }}>COMMANDER AGENT</div>
+          <div style={{ fontSize: '10px', color: '#63B3ED', letterSpacing: '1.5px', marginTop: '2px' }}>AUTONOMOUS TRIAGE LIVE STREAM</div>
         </div>
       </div>
 

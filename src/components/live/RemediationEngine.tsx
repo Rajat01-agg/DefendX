@@ -110,8 +110,8 @@ const processedCount = useRef(0)
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
         <Zap size={14} color="#05CD99" />
-        <span style={{ fontSize: '11px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '2px' }}>REMEDIATION ENGINE</span>
-        <span style={{ marginLeft: 'auto', fontSize: '10px', color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono, monospace' }}>
+        <span style={{ fontSize: '11px', fontWeight: 700, color: '#A0AEC0', letterSpacing: '2px' }}>REMEDIATION ENGINE</span>
+        <span style={{ marginLeft: 'auto', fontSize: '10px', color: '#63B3ED', fontFamily: 'JetBrains Mono, monospace' }}>
           LIVE FEED
         </span>
       </div>

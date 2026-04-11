@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Download, Search, ChevronLeft, ChevronRight, FileText } from 'lucide-react'
+import { Download, Search, ChevronLeft, ChevronRight, FileText, X, ShieldAlert, Zap, Activity, Clock } from 'lucide-react'
 import { apiClient } from '../api/client'
 import { JOB_STATUS_COLORS, JOB_STATUS_LABELS, type Domain, type Report, type ReportListItem } from '../types/schema'
 
@@ -173,7 +173,7 @@ export default function ReportsPage() {
       )}
 
       {!loading && !error && (
-        <div style={{ display: 'grid', gridTemplateColumns: selectedJobId ? '1fr 420px' : '1fr', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: selectedJobId ? '1fr 600px' : '1fr', gap: '16px', alignItems: 'start' }}>
           <div className="card" style={{ overflow: 'hidden' }}>
             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
               <thead>
@@ -249,21 +249,59 @@ export default function ReportsPage() {
           </div>
 
           {selectedJobId && (
-            <div className="card" style={{ padding: '16px', position: 'sticky', top: '84px', height: 'fit-content' }}>
-              <div style={{ marginBottom: '10px', fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)' }}>
-                Job {selectedJobId}
+            <div className="card" style={{ padding: '20px', position: 'sticky', top: '84px', display: 'flex', flexDirection: 'column', gap: '16px', maxHeight: 'calc(100vh - 120px)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div>
+                  <div style={{ fontSize: '16px', fontWeight: 700, color: 'var(--text-primary)' }}>
+                    Report Summary
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--text-secondary)', fontFamily: 'JetBrains Mono, monospace', marginTop: '4px' }}>
+                    JOB {selectedJobId.toUpperCase()}
+                  </div>
+                </div>
+                <button onClick={() => setSelectedJobId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}>
+                  <X size={18} />
+                </button>
               </div>
-              {detailLoading && <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Loading report detail...</div>}
-              {!detailLoading && !selectedReport && <div style={{ fontSize: '12px', color: '#EE5D50' }}>Unable to load detailed report.</div>}
+
+              {detailLoading && <div style={{ fontSize: '13px', color: 'var(--text-secondary)' }}>Loading report detail...</div>}
+              {!detailLoading && !selectedReport && <div style={{ fontSize: '13px', color: '#EE5D50' }}>Unable to load detailed report.</div>}
+              
               {!detailLoading && selectedReport && (
                 <>
-                  <div style={{ fontSize: '12px', color: 'var(--text-secondary)', marginBottom: '8px' }}>
-                    Findings: <b>{selectedReport.job.findingsCount}</b> | Actions: <b>{selectedReport.job.actionsCount}</b>
+                  {/* Metric Blocks */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div style={{ background: '#F7F9FC', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                       <div style={{ width: 36, height: 36, borderRadius: '8px', background: 'rgba(255, 181, 71, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <ShieldAlert size={18} color="#FFB547" />
+                       </div>
+                       <div>
+                         <div style={{ fontSize: '10px', color: 'var(--text-secondary)', letterSpacing: '1px', fontWeight: 600 }}>FINDINGS</div>
+                         <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'JetBrains Mono, monospace' }}>
+                           {selectedReport.job.findingsCount}
+                         </div>
+                       </div>
+                    </div>
+                    <div style={{ background: '#F7F9FC', border: '1px solid var(--border)', borderRadius: '10px', padding: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                       <div style={{ width: 36, height: 36, borderRadius: '8px', background: 'rgba(5, 205, 153, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                         <Zap size={18} color="#05CD99" />
+                       </div>
+                       <div>
+                         <div style={{ fontSize: '10px', color: 'var(--text-secondary)', letterSpacing: '1px', fontWeight: 600 }}>ACTIONS</div>
+                         <div style={{ fontSize: '20px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'JetBrains Mono, monospace' }}>
+                           {selectedReport.job.actionsCount}
+                         </div>
+                       </div>
+                    </div>
                   </div>
+
+                  <div style={{ width: '100%', height: '1px', background: 'var(--border)' }} />
+
+                  {/* Markdown content */}
                   <div style={{
-                    maxHeight: '420px', overflowY: 'auto', padding: '12px', borderRadius: '10px',
-                    border: '1px solid var(--border)', background: '#F7F9FC', whiteSpace: 'pre-wrap',
-                    fontSize: '12px', color: 'var(--text-primary)', lineHeight: 1.5,
+                    flex: 1, overflowY: 'auto', padding: '14px', borderRadius: '10px',
+                    border: '1px solid var(--border)', background: 'var(--bg-document, #fff)', whiteSpace: 'pre-wrap',
+                    fontSize: '13px', color: 'var(--text-primary)', lineHeight: 1.6,
                   }}>
                     {selectedReport.humanReport || 'No human-readable report body available.'}
                   </div>
