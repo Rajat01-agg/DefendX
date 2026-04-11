@@ -5,11 +5,11 @@ import CommanderAgent from '../components/live/CommanderAgent'
 import RemediationEngine from '../components/live/RemediationEngine'
 import type { LogEvent } from '../data/mockData'
 import { apiClient } from '../api/client'
-import { Play, Square, ChevronDown, Clock, Timer, Zap, Activity, Settings2 } from 'lucide-react'
+import { Play, Square, ChevronDown, Clock, Zap, Activity, Settings2 } from 'lucide-react'
 import type { Job } from '../types/schema'
 
 const LIVE_ACTIVITY_STATE_KEY = 'defendx_live_activity_state'
-const TELEMETRY_RENDER_DELAY_MS = 600
+const TELEMETRY_RENDER_DELAY_MS = 50
 const MAX_PROCESSED_MESSAGE_IDS = 1000
 
 const TIME_PRESETS = [
@@ -37,9 +37,10 @@ function toAgentFindingShape(job: Job): any[] {
 }
 
 export default function LiveActivityPage() {
-  const { connected, messages, socketState, reconnectAttempt, connectSocket, disconnectSocket } = useWebSocket()
+  const { connected, messages, socketState, connectSocket } = useWebSocket()
 
   const [persistedFindings, setPersistedFindings] = useState<any[]>([])
+  const [remediationActions, setRemediationActions] = useState<any[]>([])
   const [displayedLogs, setDisplayedLogs] = useState<LogEvent[]>([])
   const [activeJobId, setActiveJobId] = useState<string | null>(null)
   const [finalJobSnapshot, setFinalJobSnapshot] = useState<Job | null>(null)
@@ -55,8 +56,7 @@ export default function LiveActivityPage() {
   const [selectedMinutes, setSelectedMinutes] = useState(15)
   const [customMinutes, setCustomMinutes] = useState('')
   const [auditRunning, setAuditRunning] = useState(false)
-  const [auditElapsed, setAuditElapsed] = useState(0)
-  const [auditTimerId, setAuditTimerId] = useState<ReturnType<typeof setInterval> | null>(null)
+  const [auditTimerId, setAuditTimerId] = useState<ReturnType<typeof setTimeout> | null>(null)
 
   const applyFinalJobSnapshot = useCallback((job: Job) => {
     setFinalJobSnapshot(job)
@@ -96,7 +96,6 @@ export default function LiveActivityPage() {
 
   useEffect(() => {
     if (!auditRunning && !activeJobId) return
-    const finalSeconds = (customMinutes ? parseInt(customMinutes, 10) : selectedMinutes) * 60
 
     const rememberMessageId = (msgId: string) => {
       processedMessageIds.current.add(msgId)
@@ -124,12 +123,23 @@ export default function LiveActivityPage() {
         }
       }
 
+      // Add this block right after the ANALYZING if-block (after line 123)
+      if (message.state === 'REMEDIATING' && message.payload?.status === 'DONE') {
+        setRemediationActions(prev => [...prev, {
+          actionType: message.payload.actionType,
+          findingId: message.payload.findingId,
+          domain: message.payload.domain,
+          actionStatus: message.payload.status,
+          target: message.payload.target,
+          stepId: message.payload.stepId,
+        }])
+      }
+
       if (message.state === 'COMPLETED' || message.state === 'ERROR') {
         console.log('[LIVE] Job state:', message.state, '- NOT closing socket, keeping connection alive')
         if (auditTimerId) clearInterval(auditTimerId)
         setAuditTimerId(null)
         setAuditRunning(false)
-        if (message.state === 'COMPLETED') setAuditElapsed(finalSeconds)
 
         if (message.state === 'COMPLETED' && !hydratedJobs.current.has(message.jobId)) {
           hydratedJobs.current.add(message.jobId)
@@ -166,8 +176,13 @@ export default function LiveActivityPage() {
   useEffect(() => {
     const timer = setInterval(() => {
       if (logQueue.current.length > 0) {
-        const nextLog = logQueue.current.shift()!
-        setDisplayedLogs(prev => [...prev.slice(-99), nextLog])
+        // Take up to 5 logs at a time to prevent backlog while keeping animation smooth
+        const batch = logQueue.current.splice(0, 5)
+        setDisplayedLogs(prev => {
+          const nextLogs = [...prev, ...batch]
+          // Keep exactly the last 100 to prevent memory leak
+          return nextLogs.slice(-100)
+        })
       }
     }, TELEMETRY_RENDER_DELAY_MS)
     return () => clearInterval(timer)
@@ -194,10 +209,10 @@ export default function LiveActivityPage() {
   const resetLiveView = useCallback(() => {
     setDisplayedLogs([])
     setPersistedFindings([])
+    setRemediationActions([])
     setFinalJobSnapshot(null)
     setActiveJobId(null)
     setShowAuditPanel(false)
-    setAuditElapsed(0)
     sessionStorage.removeItem(LIVE_ACTIVITY_STATE_KEY)
     processedMessageIds.current.clear()
     processedMessageOrder.current = []
@@ -226,33 +241,19 @@ export default function LiveActivityPage() {
       connectSocket()
       await apiClient.triggerJob(minutes)
       setAuditRunning(true)
-      setAuditElapsed(0)
       setShowAuditPanel(false)
 
-      // Tick every second to show elapsed time
-      const id = setInterval(() => {
-        setAuditElapsed(prev => {
-          const next = prev + 1
-          if (next >= minutes * 60) {
-            clearInterval(id)
-            setAuditRunning(false)
-            return 0
-          }
-          return next
-        })
-      }, 1000)
-      setAuditTimerId(id)
+      const id = setTimeout(() => {
+        setAuditRunning(false)
+      }, minutes * 60 * 1000)
+
+      setAuditTimerId(id as any)
     } catch (error) {
       console.error('Failed to trigger job:', error)
-      disconnectSocket()
-      // Handle error, maybe show a toast
+      // disconnectSocket()
     }
-  }, [auditRunning, auditTimerId, customMinutes, selectedMinutes, connectSocket, disconnectSocket, resetLiveView])
+  }, [auditRunning, customMinutes, selectedMinutes, connectSocket, auditTimerId, resetLiveView])
 
-  const totalSeconds = (customMinutes ? parseInt(customMinutes, 10) : selectedMinutes) * 60
-  const progressPct = totalSeconds > 0 ? (auditElapsed / totalSeconds) * 100 : 0
-  const elapsedMin = Math.floor(auditElapsed / 60)
-  const elapsedSec = auditElapsed % 60
 
   const statusBar = [
     { label: 'PIPELINE', value: auditRunning ? 'RUNNING' : (finalJobSnapshot?.status || 'IDLE'), color: auditRunning ? '#05CD99' : '#3965FF' },
@@ -482,15 +483,15 @@ export default function LiveActivityPage() {
             REPORT SUMMARY
           </div>
           <pre style={{
-             whiteSpace: 'pre-wrap', 
-             fontFamily: 'JetBrains Mono, monospace', 
-             fontSize: '12px', 
-             color: 'var(--text-secondary)',
-             lineHeight: 1.6,
-             background: '#050810',
-             padding: '16px',
-             borderRadius: '8px',
-             border: '1px solid var(--border)'
+            whiteSpace: 'pre-wrap',
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: '12px',
+            color: 'var(--text-secondary)',
+            lineHeight: 1.6,
+            background: '#050810',
+            padding: '16px',
+            borderRadius: '8px',
+            border: '1px solid var(--border)'
           }}>
             {(finalJobSnapshot.report as any)?.humanReport || 'Summary not available. Check individual findings.'}
           </pre>
@@ -512,7 +513,7 @@ export default function LiveActivityPage() {
         <CommanderAgent findings={persistedFindings} revealDelayMs={1400} />
 
         {/* Right: Remediation Engine */}
-        <RemediationEngine findings={persistedFindings} revealDelayMs={1400} />
+        <RemediationEngine actions={remediationActions} revealDelayMs={1400} />
       </div>
 
       {/* Bottom Status Bar */}

@@ -10,8 +10,12 @@ export interface WebSocketMessage {
 export type SocketState = 'connecting' | 'connected' | 'reconnecting' | 'disconnected' | 'completed'
 
 function getDefaultWsBase() {
-  const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  return `${protocol}://${window.location.host}/ws`
+  const apiBase = import.meta.env.VITE_API_BASE
+  if (apiBase && typeof apiBase === 'string') {
+    return apiBase.replace(/^http/, 'ws') + '/ws'
+  }
+  const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+  return `${protocol}//${window.location.host}/ws`
 }
 
 export function useWebSocket() {
