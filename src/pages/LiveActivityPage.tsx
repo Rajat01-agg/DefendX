@@ -218,7 +218,8 @@ export default function LiveActivityPage() {
     const minutes = customMinutes ? parseInt(customMinutes, 10) : selectedMinutes
     if (!minutes || minutes <= 0) return
 
-    auditStartTimeRef.current = Date.now()
+    // Add a small buffer to account for clock drift between frontend and backend
+    auditStartTimeRef.current = Date.now() - 1000
     resetLiveView()
 
     try {

@@ -11,7 +11,7 @@ export type SocketState = 'connecting' | 'connected' | 'reconnecting' | 'disconn
 
 function getDefaultWsBase() {
   const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws'
-  return `${protocol}://${window.location.hostname}:3000`
+  return `${protocol}://${window.location.host}/ws`
 }
 
 export function useWebSocket() {
