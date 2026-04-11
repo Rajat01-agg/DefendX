@@ -79,6 +79,17 @@ export interface Report {
   job: Job
 }
 
+export interface ReportListItem {
+  id: string
+  jobId: string
+  createdAt: string
+  job: {
+    findingsCount: number
+    actionsCount: number
+    status: JobStatus
+  }
+}
+
 export interface DomainStat {
   id: string
   jobId: string

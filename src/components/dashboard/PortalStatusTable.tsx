@@ -1,5 +1,16 @@
-import { mockPortals } from '../../data/mockData'
 import { Activity } from 'lucide-react'
+
+interface PortalRow {
+  name: string
+  status: 'normal' | 'risk' | 'attack'
+  traffic: string
+  latency: string
+  activity: string
+}
+
+interface PortalStatusTableProps {
+  rows: PortalRow[]
+}
 
 const STATUS_MAP = {
   normal: { color: '#05CD99', label: 'Normal', bg: 'rgba(5,205,153,0.08)', border: 'rgba(5,205,153,0.2)' },
@@ -7,7 +18,11 @@ const STATUS_MAP = {
   attack: { color: '#EE5D50', label: 'Attack', bg: 'rgba(238,93,80,0.08)', border: 'rgba(238,93,80,0.2)' },
 }
 
-export default function PortalStatusTable() {
+export default function PortalStatusTable({ rows }: PortalStatusTableProps) {
+  const displayRows = rows.length > 0
+    ? rows
+    : [{ name: 'No Data', status: 'normal' as const, traffic: '0 logs', latency: 'N/A', activity: 'No recent jobs' }]
+
   return (
     <div className="card" style={{ padding: '20px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
@@ -35,10 +50,10 @@ export default function PortalStatusTable() {
           </tr>
         </thead>
         <tbody>
-          {mockPortals.map((portal, i) => {
+          {displayRows.map((portal, i) => {
             const cfg = STATUS_MAP[portal.status]
             return (
-              <tr key={i} style={{ borderBottom: i < mockPortals.length - 1 ? '1px solid var(--border)' : 'none' }}>
+              <tr key={i} style={{ borderBottom: i < displayRows.length - 1 ? '1px solid var(--border)' : 'none' }}>
                 <td style={{ padding: '12px 14px', fontSize: '13px', color: 'var(--text-primary)', fontWeight: 600 }}>
                   {portal.name}
                 </td>

@@ -2,7 +2,22 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar
 } from 'recharts'
-import { mockChartData } from '../../data/mockData'
+
+interface ChartDataPoint {
+  time: string
+  logsIngested: number
+  findingsDetected: number
+}
+
+interface ThreatVector {
+  name: string
+  count: number
+}
+
+interface AttackVolumeChartProps {
+  data: ChartDataPoint[]
+  vectors: ThreatVector[]
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTooltip = ({ active, payload, label }: any) => {
@@ -27,15 +42,10 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   )
 }
 
-const barData = [
-  { name: 'Brute Force', count: 142 },
-  { name: 'SQL Injection', count: 84 },
-  { name: 'DDoS', count: 56 },
-  { name: 'Port Scan', count: 22 },
-  { name: 'XSS', count: 12 },
-]
+export default function AttackVolumeChart({ data, vectors }: AttackVolumeChartProps) {
+  const chartData = data.length > 0 ? data : [{ time: '--:--', logsIngested: 0, findingsDetected: 0 }]
+  const barData = vectors.length > 0 ? vectors : [{ name: 'No Findings', count: 0 }]
 
-export default function AttackVolumeChart() {
   return (
     <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', height: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '16px' }}>
@@ -60,7 +70,7 @@ export default function AttackVolumeChart() {
       </div>
       <div style={{ flex: 1, minHeight: 220, marginBottom: '20px' }}>
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={mockChartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+          <AreaChart data={chartData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="gradCyan" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#3965FF" stopOpacity={0.2} />

@@ -1,39 +1,14 @@
 import { useEffect, useState } from 'react'
 import { Target, AlertCircle } from 'lucide-react'
 
-// Scenarios now aligned to actual Finding classifications & domains from schema
-const SCENARIOS = [
-  {
-    domain: 'auth', classification: 'brute_force', findingId: 'INC-003',
-    message: "Confirmed brute_force on Identity Services API. Escalating → Remediation Agent: block_ip.",
-    color: '#EE5D50'
-  },
-  {
-    domain: 'http', classification: 'sql_injection', findingId: 'INC-001',
-    message: "SQL injection confirmed. WAF rule deployed + IP quarantined at edge. ActionType: block_ip.",
-    color: '#3965FF'
-  },
-  {
-    domain: 'http', classification: 'ddos', findingId: 'INC-002',
-    message: 'DDoS confirmed. Rate limiting applied to 847 source IPs. ActionType: rate_limit.',
-    color: '#7551FF'
-  },
-  {
-    domain: 'auth', classification: 'session_hijacking', findingId: 'INC-006',
-    message: 'Session hijacking confirmed. All sessions revoked, MFA forced. ActionType: block_ip + alert_soc.',
-    color: '#EE5D50'
-  },
-  {
-    domain: 'infra', classification: 'resource_exhaustion', findingId: 'INC-005',
-    message: 'Resource exhaustion confirmed. Escalating for manual review. ActionType: manual_review.',
-    color: '#E09B30'
-  },
-]
+interface CommanderAgentProps {
+  findings?: any[]
+  revealDelayMs?: number
+}
 
-export default function CommanderAgent() {
+export default function CommanderAgent({ findings = [], revealDelayMs = 1400 }: CommanderAgentProps) {
   const [radarAngle, setRadarAngle] = useState(0)
-  const [feed, setFeed] = useState<typeof SCENARIOS>([SCENARIOS[0]])
-  const [nextIdx, setNextIdx] = useState(1)
+  const [feed, setFeed] = useState<any[]>([])
 
   useEffect(() => {
     const radarInterval = setInterval(() => {
@@ -43,12 +18,36 @@ export default function CommanderAgent() {
   }, [])
 
   useEffect(() => {
+    if (!findings || findings.length === 0) {
+      setFeed([])
+      return
+    }
+
+    const mapped = findings.map(f => ({
+      domain: f.domain || 'unknown',
+      classification: f.classification || 'unknown',
+      findingId: f.finding_id || f.findingId || 'INC-000',
+      message: `${f.summary || ''} Escalating → ${f.recommended_action || ''}`,
+      color: f.severity === 'critical' ? '#EE5D50' : 
+             f.severity === 'high' ? '#E09B30' : 
+             f.severity === 'medium' ? '#FFB547' : '#3965FF'
+    }))
+
+    setFeed([])
+
+    let idx = 0
     const feedInterval = setInterval(() => {
-      setFeed(prev => [SCENARIOS[nextIdx], ...prev])
-      setNextIdx(prev => (prev + 1) % SCENARIOS.length)
-    }, 3500)
+      if (idx < mapped.length) {
+        // eslint-disable-next-line no-loop-func
+        setFeed(prev => [mapped[idx], ...prev])
+        idx++
+      } else {
+        clearInterval(feedInterval)
+      }
+    }, revealDelayMs)
+
     return () => clearInterval(feedInterval)
-  }, [nextIdx])
+  }, [findings, revealDelayMs])
 
   return (
     <div style={{

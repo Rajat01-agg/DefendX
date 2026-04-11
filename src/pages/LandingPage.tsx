@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Shield, Zap, Eye, EyeOff, Lock, Globe, ArrowRight, CheckCircle, GitFork, ExternalLink, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
@@ -86,6 +86,7 @@ const USE_CASES = [
 
 export default function LandingPage() {
   const navigate = useNavigate()
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated)
   
   // Login Form State
   const [email, setEmail] = useState('')
@@ -94,6 +95,12 @@ export default function LandingPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const login = useAuthStore(s => s.login)
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard', { replace: true })
+    }
+  }, [isAuthenticated, navigate])
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

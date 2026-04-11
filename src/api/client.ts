@@ -1,4 +1,4 @@
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:3000'
+const API_BASE = import.meta.env.VITE_API_BASE || ''
 
 export interface DashboardResponse {
   globalStat: import('../types/schema').GlobalStat
@@ -14,7 +14,7 @@ export interface IncidentsResponse {
 }
 
 export interface ReportsResponse {
-  reports: import('../types/schema').Report[]
+  reports: import('../types/schema').ReportListItem[]
 }
 
 class ApiClient {
@@ -58,7 +58,7 @@ class ApiClient {
     return this.request(`/api/incidents?page=${page}&limit=${limit}`)
   }
 
-  async getReports(): Promise<{ reports: import('../types/schema').Report[] }> {
+  async getReports(): Promise<ReportsResponse> {
     return this.request('/api/reports')
   }
 

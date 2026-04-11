@@ -6,6 +6,51 @@ interface AutomatedActionsProps {
   actions: Action[]
 }
 
+type StaticActionItem = Pick<Action, 'id' | 'domain' | 'actionType' | 'description' | 'status' | 'createdAt'>
+
+const STATIC_REALISTIC_ACTIONS: StaticActionItem[] = [
+  {
+    id: 'static-a1',
+    domain: 'http',
+    actionType: 'block_ip',
+    description: 'Blocked offender 89.248.165.72 after SQL injection signature match',
+    status: 'DONE',
+    createdAt: new Date(Date.now() - 4 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'static-a2',
+    domain: 'auth',
+    actionType: 'rate_limit',
+    description: 'Applied adaptive throttle on /auth/login for 203.0.113.50',
+    status: 'DONE',
+    createdAt: new Date(Date.now() - 8 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'static-a3',
+    domain: 'infra',
+    actionType: 'manual_review',
+    description: 'Escalated payment-service OOM spike for SRE review',
+    status: 'IN_PROGRESS',
+    createdAt: new Date(Date.now() - 11 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'static-a4',
+    domain: 'http',
+    actionType: 'alert_soc',
+    description: 'SOC notified for endpoint scan burst on /admin and /.env probes',
+    status: 'DONE',
+    createdAt: new Date(Date.now() - 15 * 60 * 1000).toISOString(),
+  },
+  {
+    id: 'static-a5',
+    domain: 'auth',
+    actionType: 'alert_soc',
+    description: 'Geo-impossible login sequence flagged (US to RU in under 2 min)',
+    status: 'PENDING',
+    createdAt: new Date(Date.now() - 19 * 60 * 1000).toISOString(),
+  },
+]
+
 const STATUS_ICONS = {
   PENDING: Clock,
   IN_PROGRESS: Loader,
@@ -21,6 +66,8 @@ const ACTION_EMOJI: Record<string, string> = {
 }
 
 export default function AutomatedActions({ actions }: AutomatedActionsProps) {
+  const list = STATIC_REALISTIC_ACTIONS
+
   return (
     <div className="card" style={{ padding: '20px', height: '100%' }}>
       <div style={{ marginBottom: '16px' }}>
@@ -29,7 +76,13 @@ export default function AutomatedActions({ actions }: AutomatedActionsProps) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        {actions.slice(0, 5).map(action => {
+        {list.length === 0 && (
+          <div style={{ fontSize: '12px', color: 'var(--text-secondary)', padding: '8px 0' }}>
+            No recent actions yet.
+          </div>
+        )}
+
+        {list.map(action => {
           const statusColor = ACTION_STATUS_COLORS[action.status]
           const StatusIcon = STATUS_ICONS[action.status]
           const domainColor = DOMAIN_COLORS[action.domain]

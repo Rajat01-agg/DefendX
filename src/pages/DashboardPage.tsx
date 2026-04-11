@@ -7,7 +7,7 @@ import { DOMAIN_LABELS, DOMAIN_COLORS, JOB_STATUS_COLORS, JOB_STATUS_LABELS, typ
 import type { Domain } from '../types/schema'
 import { TrendingUp, AlertTriangle, CheckCircle, Clock, Layers, ShieldCheck, BarChart3 } from 'lucide-react'
 import { PieChart, Pie, Cell, ResponsiveContainer } from 'recharts'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 export default function DashboardPage() {
   const [globalStat, setGlobalStat] = useState<GlobalStat | null>(null)
@@ -16,9 +16,12 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    let cancelled = false
+
     const fetchDashboard = async () => {
       try {
         const data = await apiClient.getDashboard()
+        if (cancelled) return
         setGlobalStat(data.globalStat)
         setDomainBreakdown(data.domainBreakdown)
         setRecentJobs(data.recentJobs)
@@ -31,31 +34,127 @@ export default function DashboardPage() {
       }
     }
     fetchDashboard()
+
+    const interval = setInterval(fetchDashboard, 10000)
+    const handleFocus = () => {
+      void fetchDashboard()
+    }
+
+    window.addEventListener('focus', handleFocus)
+
+    return () => {
+      cancelled = true
+      clearInterval(interval)
+      window.removeEventListener('focus', handleFocus)
+    }
   }, [])
 
-  if (loading || !globalStat) {
-    return <div>Loading...</div>
+  const derivedGlobalStat: GlobalStat = {
+    id: 'derived',
+    totalJobs: recentJobs.length,
+    totalLogs: recentJobs.reduce((sum, job) => sum + (job.totalLogs || 0), 0),
+    totalFindings: recentJobs.reduce((sum, job) => sum + (job.findingsCount || 0), 0),
+    totalActions: recentJobs.reduce((sum, job) => sum + (job.actionsCount || 0), 0),
+    lastUpdated: new Date().toISOString(),
   }
 
-  const g = globalStat
-  const critActive = recentJobs.flatMap(j => j.findings).filter(f => f.severity === 'critical').length
-  const highActive = recentJobs.flatMap(j => j.findings).filter(f => f.severity === 'high').length
+  const g = globalStat ?? derivedGlobalStat
+
+  const normalizedDomainBreakdown = useMemo(() => {
+    const acc: Record<Domain, { domain: Domain; logsProcessed: number; findingsCount: number; actionsCount: number }> = {
+      http: { domain: 'http', logsProcessed: 0, findingsCount: 0, actionsCount: 0 },
+      auth: { domain: 'auth', logsProcessed: 0, findingsCount: 0, actionsCount: 0 },
+      infra: { domain: 'infra', logsProcessed: 0, findingsCount: 0, actionsCount: 0 },
+    }
+
+    for (const entry of (domainBreakdown as unknown as any[])) {
+      const domain = entry.domain as Domain
+      if (!domain || !acc[domain]) continue
+
+      if (entry._sum) {
+        acc[domain].logsProcessed = entry._sum.logsProcessed ?? 0
+        acc[domain].findingsCount = entry._sum.findingsCount ?? 0
+        acc[domain].actionsCount = entry._sum.actionsCount ?? 0
+      } else {
+        acc[domain].logsProcessed = entry.logsProcessed ?? 0
+        acc[domain].findingsCount = entry.findingsCount ?? 0
+        acc[domain].actionsCount = entry.actionsCount ?? 0
+      }
+    }
+
+    return [acc.http, acc.auth, acc.infra]
+  }, [domainBreakdown])
+
+  const critActive = recentJobs.flatMap(j => j.findings || []).filter(f => f.severity === 'critical').length
+  const highActive = recentJobs.flatMap(j => j.findings || []).filter(f => f.severity === 'high').length
+
+  const allFindings = recentJobs.flatMap(j => j.findings || [])
+
+  const chartSeries = useMemo(() => {
+    return [...recentJobs]
+      .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      .map((job) => ({
+        time: new Date(job.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false }),
+        logsIngested: job.totalLogs || 0,
+        findingsDetected: job.findingsCount || 0,
+      }))
+  }, [recentJobs])
+
+  const threatVectors = useMemo(() => {
+    const counts = new Map<string, number>()
+
+    for (const finding of allFindings) {
+      const name = finding.classification.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+      counts.set(name, (counts.get(name) || 0) + 1)
+    }
+
+    return [...counts.entries()]
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5)
+  }, [allFindings])
+
+  const portalRows = useMemo(() => {
+    return (['http', 'auth', 'infra'] as Domain[]).map((domain) => {
+      const stats = normalizedDomainBreakdown.find((item) => item.domain === domain)
+      const findingsInDomain = allFindings.filter((finding) => finding.domain === domain)
+      const criticalCount = findingsInDomain.filter((finding) => finding.severity === 'critical').length
+      const highCount = findingsInDomain.filter((finding) => finding.severity === 'high').length
+
+      const status: 'normal' | 'risk' | 'attack' = criticalCount > 0
+        ? 'attack'
+        : (highCount > 0 || (stats?.findingsCount ?? 0) > 0)
+          ? 'risk'
+          : 'normal'
+
+      return {
+        name: DOMAIN_LABELS[domain],
+        status,
+        traffic: `${(stats?.logsProcessed ?? 0).toLocaleString()} logs`,
+        latency: 'N/A',
+        activity: `${stats?.findingsCount ?? 0} findings / ${stats?.actionsCount ?? 0} actions`,
+      }
+    })
+  }, [allFindings, normalizedDomainBreakdown])
 
   // Domain pie data
   const domainPieData = (['http', 'auth', 'infra'] as Domain[]).map(d => ({
     name: DOMAIN_LABELS[d],
-    value: domainBreakdown.find(db => db.domain === d)?.findingsCount || 0,
+    value: normalizedDomainBreakdown.find(db => db.domain === d)?.findingsCount || 0,
     color: DOMAIN_COLORS[d],
   }))
 
   // Severity breakdown for card
-  const allFindings = recentJobs.flatMap(j => j.findings)
   const sevBreakdown = [
     { label: 'Critical', count: critActive, color: '#E31A1A' },
     { label: 'High', count: highActive, color: '#E09B30' },
     { label: 'Medium', count: allFindings.filter(f => f.severity === 'medium').length, color: '#7551FF' },
     { label: 'Low', count: allFindings.filter(f => f.severity === 'low').length, color: '#3965FF' },
   ]
+
+  if (loading) {
+    return <div>Loading...</div>
+  }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -89,7 +188,7 @@ export default function DashboardPage() {
           {
             label: 'PENDING REVIEW',
             value: String(g.totalJobs).padStart(2, '0'),
-            sub: `${mockJobs.filter(j => j.status !== 'COMPLETED').length} active since 09:00`,
+            sub: `${recentJobs.filter(j => j.status !== 'COMPLETED').length} active since 09:00`,
             trend: false,
             accentColor: '#7551FF',
             icon: <Clock size={18} color="#7551FF" />,
@@ -119,13 +218,13 @@ export default function DashboardPage() {
 
       {/* Chart + Live Incident Feed */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '20px' }}>
-        <AttackVolumeChart />
+        <AttackVolumeChart data={chartSeries} vectors={threatVectors} />
         <FindingsFeed findings={allFindings} />
       </div>
 
       {/* Portal Status + Threat Domain Breakdown */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 360px', gap: '20px' }}>
-        <PortalStatusTable />
+        <PortalStatusTable rows={portalRows} />
 
         <div className="card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
@@ -183,7 +282,7 @@ export default function DashboardPage() {
 
       {/* Recent Actions + Recent Jobs */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-        <AutomatedActions actions={recentJobs.flatMap(j => j.actions)} />
+        <AutomatedActions actions={recentJobs.flatMap(j => j.actions || [])} />
 
         <div className="card" style={{ padding: '20px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
@@ -191,7 +290,7 @@ export default function DashboardPage() {
             <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-primary)' }}>Recent Pipeline Jobs</h3>
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {mockJobs.map(job => {
+            {recentJobs.map(job => {
               const statusColor = JOB_STATUS_COLORS[job.status]
               return (
                 <div key={job.id} style={{

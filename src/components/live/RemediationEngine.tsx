@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Download, Shield, Zap } from 'lucide-react'
 import type { ActionType, ActionStatus, Domain } from '../../types/schema'
 import { ACTION_TYPE_LABELS, ACTION_STATUS_COLORS } from '../../types/schema'
@@ -11,52 +11,24 @@ interface RemediationState {
   findingId: string
   offender: string
   quote: string
-  doneCount: number
-  load: string
 }
 
-const REMEDIATION_STATES: RemediationState[] = [
-  {
-    actionType: 'block_ip', domain: 'http', actionStatus: 'DONE',
-    description: 'IP 185.220.101.45 quarantined at WAF layer',
-    findingId: 'INC-001', offender: 'ip: 185.220.101.45',
-    quote: '"SQL injection source neutralized at edge in 14ms"',
-    doneCount: 1242, load: '0.04%',
-  },
-  {
-    actionType: 'rate_limit', domain: 'http', actionStatus: 'DONE',
-    description: 'Rate limit applied to 847 botnet source IPs',
-    findingId: 'INC-002', offender: 'ip: 103.45.xx.xx (847 sources)',
-    quote: '"DDoS traffic null-routed. Payment gateway latency restored"',
-    doneCount: 1243, load: '0.06%',
-  },
-  {
-    actionType: 'block_ip', domain: 'auth', actionStatus: 'DONE',
-    description: 'Brute force source blocked on auth-api endpoint',
-    findingId: 'INC-003', offender: 'ip: 103.4xx.xx.x',
-    quote: '"Auth endpoint secured. 127 failed attempts terminated"',
-    doneCount: 1248, load: '0.03%',
-  },
-  {
-    actionType: 'alert_soc', domain: 'auth', actionStatus: 'DONE',
-    description: 'SOC alerted: 3 credential stuffing successes detected',
-    findingId: 'INC-004', offender: 'ip: 45.33.xx.xx',
-    quote: '"Alert dispatched. 3 compromised accounts flagged for review"',
-    doneCount: 1251, load: '0.02%',
-  },
-  {
-    actionType: 'manual_review', domain: 'infra', actionStatus: 'IN_PROGRESS',
-    description: 'Payment processor pod OOMKilled — escalated for review',
-    findingId: 'INC-005', offender: 'service: payment-processor-pod-xz91',
-    quote: '"Resource exhaustion requires human approval for remediation"',
-    doneCount: 1254, load: '0.12%',
-  },
-]
+interface RemediationEngineProps {
+  findings?: any[]
+  revealDelayMs?: number
+}
 
-export default function RemediationEngine() {
-  const [feed, setFeed] = useState<RemediationState[]>([REMEDIATION_STATES[0]])
-  const [nextIdx, setNextIdx] = useState(1)
-  const [doneCount, setDoneCount] = useState(REMEDIATION_STATES[0].doneCount)
+export default function RemediationEngine({ findings = [], revealDelayMs = 1400 }: RemediationEngineProps) {
+  const [feed, setFeed] = useState<RemediationState[]>([])
+
+  const doneCount = useMemo(
+    () => feed.filter((item) => item.actionStatus === 'DONE').length,
+    [feed]
+  )
+  const inProgressCount = useMemo(
+    () => feed.filter((item) => item.actionStatus === 'IN_PROGRESS').length,
+    [feed]
+  )
 
   const handleDownloadLog = () => {
     const logText = "--- DEFENDX REMEDIATION AUDIT LOG ---\n"
@@ -70,27 +42,48 @@ export default function RemediationEngine() {
   }
 
   useEffect(() => {
+    if (!findings || findings.length === 0) {
+      setFeed([])
+      return
+    }
+
+    const mapped: RemediationState[] = findings.map(f => {
+      const rec = (f.recommended_action || '').toLowerCase()
+      const cls = (f.classification || '').toLowerCase()
+      let aType: ActionType = 'alert_soc'
+      
+      if (rec.includes('block') || cls.includes('sql') || cls.includes('brute')) aType = 'block_ip'
+      else if (rec.includes('rate') || cls.includes('ddos')) aType = 'rate_limit'
+      else if (rec.includes('memory') || cls.includes('resource')) aType = 'manual_review'
+
+      return {
+        actionType: aType,
+        domain: f.domain || 'unknown',
+        actionStatus: aType === 'manual_review' ? 'IN_PROGRESS' : 'DONE',
+        description: aType === 'manual_review'
+          ? `Escalated ${f.classification} for manual resource allocation review`
+          : `Resolved ${f.classification} via ${aType}`,
+        findingId: f.finding_id || f.findingId || 'INC-000',
+        offender: f.offender?.value || 'unknown',
+        quote: `"${f.recommended_action || 'Action executed.'}"`,
+      }
+    })
+
+    setFeed([])
+    let idx = 0
     const t = setInterval(() => {
-      setFeed(prev => [REMEDIATION_STATES[nextIdx], ...prev])
-      setNextIdx(i => (i + 1) % REMEDIATION_STATES.length)
-    }, 4000)
+      if (idx < mapped.length) {
+        // eslint-disable-next-line no-loop-func
+        setFeed(prev => [mapped[idx], ...prev])
+        idx++
+      } else {
+        clearInterval(t)
+      }
+    }, revealDelayMs)
     return () => clearInterval(t)
-  }, [nextIdx])
+  }, [findings, revealDelayMs])
 
-  useEffect(() => {
-    const current = feed[0]
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setDoneCount(current.doneCount)
-  }, [feed])
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      setDoneCount(c => c + Math.floor(Math.random() * 3))
-    }, 3000)
-    return () => clearInterval(t)
-  }, [])
-
-  const currentLoad = feed[0]?.load || '0.00%'
+  const currentLoad = `${Math.min(100, Math.max(0, Math.round((inProgressCount / Math.max(feed.length, 1)) * 100)))}%`
 
   return (
     <div style={{

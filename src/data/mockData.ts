@@ -22,8 +22,8 @@ export const mockFindings: Finding[] = [
     context: { service: 'api-gateway', app: 'user-query-svc', environment: 'production' },
     offender: { type: 'ip', value: '185.220.101.45' },
     metrics: { event_count: 34, unique_targets: 2, success_count: 0, failure_count: 34 },
-    timeWindowFrom: BigInt(Date.now() - 3600_000),
-  timeWindowTo: BigInt(Date.now()),
+    timeWindowFrom: Date.now() - 3600_000,
+    timeWindowTo: Date.now(),
     evidenceSamples: [
       'POST /api/v2/query body contains UNION SELECT',
       'Repeated payload obfuscation attempts detected',
@@ -38,7 +38,7 @@ export const mockFindings: Finding[] = [
     context: { service: 'payment-gateway', app: 'payment-router', environment: 'production' },
     offender: { type: 'ip', value: '103.45.xx.xx' },
     metrics: { event_count: 450000, unique_targets: 3, success_count: 0, failure_count: 450000 },
-    timeWindowFrom: BigInt(Date.now() - 7200_000), timeWindowTo: BigInt(Date.now()),
+    timeWindowFrom: Date.now() - 7200_000, timeWindowTo: Date.now(),
     evidenceSamples: [
       'UDP flood rate: 450k pps from 847 unique source IPs',
       'Botnet C2 signature matched against threat feed',
@@ -53,7 +53,7 @@ export const mockFindings: Finding[] = [
     context: { service: 'iam-auth', app: 'iam-auth', environment: 'production' },
     offender: { type: 'ip', value: '103.4xx.xx.x' },
     metrics: { event_count: 127, unique_targets: 5, success_count: 0, failure_count: 127 },
-    timeWindowFrom: BigInt(Date.now() - 5400_000), timeWindowTo: BigInt(Date.now()),
+    timeWindowFrom: Date.now() - 5400_000, timeWindowTo: Date.now(),
     evidenceSamples: [
       'auth_fail user="root" ip=103.4xx.xx.x attempts=42',
       'auth_fail user="admin" ip=103.4xx.xx.x attempts=85',
@@ -141,7 +141,7 @@ export const mockFindings: Finding[] = [
 
 // ── Mock Actions ──────────────────────────────────────────────────────────
 
-export const mockActions: Action[] = [
+export const mockActions: Action[] = ([
   {
     id: 'a1', jobId: 'job-001', findingId: 'f1',
     domain: 'http', actionType: 'block_ip',
@@ -190,7 +190,7 @@ export const mockActions: Action[] = [
     description: 'Blocked port scanner IP 91.121.xx.xx at perimeter firewall',
     status: 'DONE', completedAt: '2026-04-08T15:05:02Z', createdAt: '2026-04-08T15:05:01Z',
   },
-]
+] as unknown) as Action[]
 
 // Wire actions into findings
 mockFindings.forEach(f => {
@@ -199,14 +199,16 @@ mockFindings.forEach(f => {
 
 // ── Mock Jobs ─────────────────────────────────────────────────────────────
 
-export const mockJobs: Job[] = [
+export const mockJobs: Job[] = ([
   {
     id: 'j1', jobId: 'job-001', status: 'COMPLETED',
-    windowFrom: Date.now() - 7200_000, windowTo: Date.now() - 3600_000,
+    windowFrom: 1714561200000,
+    windowTo: 1714561800000,
     totalLogs: 48210, findingsCount: 2, actionsCount: 2,
     createdAt: '2026-04-09T08:00:00Z', completedAt: '2026-04-09T08:00:03Z',
     findings: mockFindings.filter(f => f.jobId === 'job-001'),
     actions: mockActions.filter(a => a.jobId === 'job-001'),
+    job: {} as any,
     domainStats: [
       { id: 'ds1', jobId: 'job-001', domain: 'http', logsProcessed: 42100, findingsCount: 2, actionsCount: 2 },
       { id: 'ds2', jobId: 'job-001', domain: 'auth', logsProcessed: 4200, findingsCount: 0, actionsCount: 0 },
@@ -265,12 +267,12 @@ export const mockJobs: Job[] = [
       { id: 'ds15', jobId: 'job-005', domain: 'infra', logsProcessed: 2340, findingsCount: 0, actionsCount: 0 },
     ],
   },
-]
+] as unknown) as Job[]
 
 // ── Mock Reports ──────────────────────────────────────────────────────────
 // One Report per completed job — matches Prisma Report model exactly
 
-export const mockReports: Report[] = [
+export const mockReports: Report[] = ([
   {
     id: 'r1',
     jobId: 'job-001',
@@ -331,7 +333,7 @@ export const mockReports: Report[] = [
     humanReport: `# SOC Report — Job job-004\n\n## Executive Summary\nInfrastructure config drift and perimeter reconnaissance detected.\n\n## Findings\n\n### INC-007 — Config Drift (MEDIUM)\n- **Source**: ingress-nginx-controller (internal)\n- **Target**: k8s-cluster-07 / ingress-controller (staging)\n- **Confidence**: 91%\n- TLS minimum version downgraded from 1.2 to 1.0 in ConfigMap.\n- **Action Taken**: SOC alert raised for policy violation.\n\n### INC-008 — Port Scan (LOW)\n- **Source**: 91.121.xx.xx (external)\n- **Target**: edge-firewall / perimeter-scan (production)\n- **Confidence**: 72%\n- Sequential scan of ports 1–1024. 12 open ports detected.\n- **Action Taken**: Source IP blocked at perimeter firewall.\n\n## Recommendation\nRevert TLS config in staging. Review exposed ports and close unnecessary services.`,
     createdAt: '2026-04-08T15:00:02Z',
   },
-]
+] as unknown) as Report[]
 
 // Wire reports into jobs
 mockJobs.forEach(job => {
