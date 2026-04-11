@@ -34,13 +34,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
       <p style={{ color: 'var(--text-muted)', marginBottom: '6px', fontFamily: 'JetBrains Mono, monospace' }}>{label}</p>
       {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
       {payload.map((p: any) => (
-        <p key={p.dataKey} style={{ color: p.color, marginBottom: '2px' }}>
-          {p.name}: <strong>{p.value.toLocaleString()}</strong>
+        <p key={p?.dataKey || Math.random()} style={{ color: p?.color || 'var(--text-primary)', marginBottom: '2px' }}>     
+          {p?.name}: <strong>{p?.value?.toLocaleString() || 0}</strong>
         </p>
       ))}
     </div>
   )
 }
+
 
 export default function AttackVolumeChart({ data, vectors }: AttackVolumeChartProps) {
   const chartData = data.length > 0 ? data : [{ time: '--:--', logsIngested: 0, findingsDetected: 0 }]

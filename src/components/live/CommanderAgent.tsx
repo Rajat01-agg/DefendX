@@ -1,14 +1,35 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { Target, AlertCircle } from 'lucide-react'
 
+export interface Finding {
+  finding_id?: string;
+  findingId?: string;
+  severity?: string;
+  domain?: string;
+  classification?: string;
+  summary?: string;
+  recommended_action?: string;
+  [key: string]: any;
+}
+
+export interface MappedFeedItem {
+  findingId: string;
+  message: string;
+  color: string;
+  domain: string;
+  classification: string;
+}
+
 interface CommanderAgentProps {
-  findings?: any[]
+  findings?: Finding[]
   revealDelayMs?: number
 }
 
 export default function CommanderAgent({ findings = [], revealDelayMs = 1400 }: CommanderAgentProps) {
   const [radarAngle, setRadarAngle] = useState(0)
-  const [feed, setFeed] = useState<any[]>([])
+  const [feed, setFeed] = useState<MappedFeedItem[]>([])
+  const [queue, setQueue] = useState<MappedFeedItem[]>([])
+  const processedCount = useRef(0)
 
   useEffect(() => {
     const radarInterval = setInterval(() => {
@@ -17,37 +38,72 @@ export default function CommanderAgent({ findings = [], revealDelayMs = 1400 }: 
     return () => clearInterval(radarInterval)
   }, [])
 
+  // 1. Process new findings and add to queue
   useEffect(() => {
-    if (!findings || findings.length === 0) {
+    if (!findings || !Array.isArray(findings) || findings.length === 0) {
       setFeed([])
+      setQueue([])
+      processedCount.current = 0
       return
     }
 
-    const mapped = findings.map(f => ({
-      domain: f.domain || 'unknown',
-      classification: f.classification || 'unknown',
-      findingId: f.finding_id || f.findingId || 'INC-000',
-      message: `${f.summary || ''} Escalating → ${f.recommended_action || ''}`,
-      color: f.severity === 'critical' ? '#EE5D50' : 
-             f.severity === 'high' ? '#E09B30' : 
-             f.severity === 'medium' ? '#FFB547' : '#3965FF'
-    }))
+    // Handle full array resent or cleanup logic where length shrinks
+    if (findings.length < processedCount.current) {
+      setFeed([])
+      setQueue([])
+      processedCount.current = 0
+    }
 
-    setFeed([])
+    const newFindings = findings.slice(processedCount.current)
+    if (newFindings.length === 0) return
 
-    let idx = 0
-    const feedInterval = setInterval(() => {
-      if (idx < mapped.length) {
-        // eslint-disable-next-line no-loop-func
-        setFeed(prev => [mapped[idx], ...prev])
-        idx++
-      } else {
-        clearInterval(feedInterval)
-      }
-    }, revealDelayMs)
+    const newMappedItems = newFindings.reduce((acc: MappedFeedItem[], f: Finding | null | undefined) => {
+      if (!f) return acc; // Filter out bad/falsy objects safely 
 
-    return () => clearInterval(feedInterval)
-  }, [findings, revealDelayMs])
+      const sev = String(f.severity || '').toLowerCase()
+      acc.push({
+        domain: String(f.domain || 'unknown'),
+        classification: String(f.classification || 'unknown'),
+        findingId: String(f.finding_id || f.findingId || 'INC-000'),
+        message: `${f.summary || ''} Escalating → ${f.recommended_action || ''}`,
+        color: sev === 'critical' ? '#EE5D50' :
+               sev === 'high' ? '#E09B30' :
+               sev === 'medium' ? '#FFB547' : '#3965FF'
+      });
+
+      return acc;
+    }, []);
+
+    // IMPORTANT: Update processedCount by the length of the origin raw array
+    // so it doesn't drift if there were null/filtered findings.
+    processedCount.current += newFindings.length
+
+    if (newMappedItems.length > 0) {
+      setQueue(prevQueue => [...prevQueue, ...newMappedItems]);
+    }
+  }, [findings])
+
+  // 2. Consume the queue asynchronously and securely
+  useEffect(() => {
+    if (queue.length === 0) return;
+
+    const timeoutId = setTimeout(() => {
+      setQueue(prevQueue => {
+        if (prevQueue.length === 0) return prevQueue;
+        
+        const [nextItem, ...rest] = prevQueue;
+        
+        // Final guard against dropping falsy/undefined inside the feed
+        if (nextItem) {
+          setFeed(prevFeed => [nextItem, ...prevFeed]);
+        }
+        
+        return rest;
+      });
+    }, revealDelayMs);
+
+    return () => clearTimeout(timeoutId);
+  }, [queue, revealDelayMs]);
 
   return (
     <div style={{

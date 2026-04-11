@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { Download, Shield, Zap } from 'lucide-react'
 import type { ActionType, ActionStatus, Domain } from '../../types/schema'
 import { ACTION_TYPE_LABELS, ACTION_STATUS_COLORS } from '../../types/schema'
@@ -41,17 +41,28 @@ export default function RemediationEngine({ findings = [], revealDelayMs = 1400 
     link.click();
   }
 
+const processedCount = useRef(0)
+
   useEffect(() => {
     if (!findings || findings.length === 0) {
       setFeed([])
+      processedCount.current = 0
       return
     }
 
-    const mapped: RemediationState[] = findings.map(f => {
+    if (findings.length < processedCount.current) {
+      setFeed([])
+      processedCount.current = 0
+    }
+
+    const newFindings = findings.slice(processedCount.current)
+    if (newFindings.length === 0) return
+
+    const mapped: RemediationState[] = newFindings.map(f => {
       const rec = (f.recommended_action || '').toLowerCase()
       const cls = (f.classification || '').toLowerCase()
       let aType: ActionType = 'alert_soc'
-      
+
       if (rec.includes('block') || cls.includes('sql') || cls.includes('brute')) aType = 'block_ip'
       else if (rec.includes('rate') || cls.includes('ddos')) aType = 'rate_limit'
       else if (rec.includes('memory') || cls.includes('resource')) aType = 'manual_review'
@@ -59,7 +70,7 @@ export default function RemediationEngine({ findings = [], revealDelayMs = 1400 
       return {
         actionType: aType,
         domain: f.domain || 'unknown',
-        actionStatus: aType === 'manual_review' ? 'IN_PROGRESS' : 'DONE',
+        actionStatus: aType === 'manual_review' ? 'IN_PROGRESS' : 'DONE',       
         description: aType === 'manual_review'
           ? `Escalated ${f.classification} for manual resource allocation review`
           : `Resolved ${f.classification} via ${aType}`,
@@ -69,13 +80,12 @@ export default function RemediationEngine({ findings = [], revealDelayMs = 1400 
       }
     })
 
-    setFeed([])
     let idx = 0
     const t = setInterval(() => {
       if (idx < mapped.length) {
-        // eslint-disable-next-line no-loop-func
         setFeed(prev => [mapped[idx], ...prev])
         idx++
+        processedCount.current++
       } else {
         clearInterval(t)
       }

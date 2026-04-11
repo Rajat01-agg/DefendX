@@ -1,5 +1,6 @@
 import Sidebar from './Sidebar'
 import Navbar from './Navbar'
+import { ErrorBoundary } from './ErrorBoundary'
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -17,7 +18,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             overflowY: 'auto',
           }}
         >
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </main>
       </div>
     </div>

@@ -71,33 +71,30 @@ A 3-column real-time operations view:
 
 ---
 
-## 🏗️ Architecture
+## 📦 Installation & Setup
 
+### 1. Install Dependencies
+```bash
+npm install
 ```
-src/
-├── components/
-│   ├── charts/           # Recharts-based data visualizations
-│   │   └── AttackVolumeChart.tsx
-│   ├── dashboard/        # Dashboard-specific widgets
-│   │   ├── AutomatedActions.tsx
-│   │   ├── IncidentFeed.tsx
-│   │   └── PortalStatusTable.tsx
-│   ├── layout/           # App shell (navbar, sidebar)
-│   │   ├── AppLayout.tsx
-│   │   ├── Navbar.tsx
-│   │   └── Sidebar.tsx
-│   └── live/             # Live activity panel components
-│       ├── CommanderAgent.tsx
-│       ├── RemediationEngine.tsx
-│       └── TelemetryStream.tsx
-├── data/
-│   └── mockData.ts       # Mock data (mirrors Prisma backend schema)
-├── hooks/
-│   └── useMockWebSocket.ts   # Simulated WebSocket for telemetry
-├── pages/
-│   ├── DashboardPage.tsx
-│   ├── LandingPage.tsx
-│   ├── LiveActivityPage.tsx
+
+### 2. Environment Variables
+Create a `.env` file in the `frontend` root based on your backend URL (usually port 3000):
+```env
+VITE_API_URL=http://localhost:3000/api
+VITE_WS_URL=ws://localhost:3000
+```
+
+### 3. Run Development Server
+```bash
+npm run dev
+```
+The app will be available at `http://localhost:5173`.
+
+### 4. Build for Production
+```bash
+npm run build
+```
 │   ├── LoginPage.tsx
 │   ├── ProfilePage.tsx
 │   ├── ReportsPage.tsx

@@ -25,8 +25,10 @@ export default function FindingsFeed({ findings }: FindingsFeedProps) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         {feed.map((finding, i) => {
-          const sevColor = SEV_COLORS[finding.severity]
-          const domainColor = DOMAIN_COLORS[finding.domain]
+          const rawSev = (finding.severity || 'low').toLowerCase() as keyof typeof SEV_COLORS;
+          const sevColor = SEV_COLORS[rawSev] || SEV_COLORS.low;
+          const rawDomain = (finding.domain || 'http').toLowerCase() as keyof typeof DOMAIN_COLORS;
+          const domainColor = DOMAIN_COLORS[rawDomain] || DOMAIN_COLORS.http;
           return (
             <div key={finding.id} style={{
               padding: '12px',
@@ -37,11 +39,11 @@ export default function FindingsFeed({ findings }: FindingsFeedProps) {
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '4px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', textTransform: 'capitalize' }}>{finding.classification.replace(/_/g, ' ')}</span>
+                  <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text-primary)', textTransform: 'capitalize' }}>{(finding.classification || 'unknown').replace(/_/g, ' ')}</span>
                   <span style={{
                     padding: '1px 6px', borderRadius: '4px',
                     background: `${domainColor}12`, fontSize: '9px', color: domainColor, fontWeight: 600,
-                  }}>{finding.domain.toUpperCase()}</span>
+                  }}>{(finding.domain || 'http').toUpperCase()}</span>
                 </div>
                 <span style={{
                   fontSize: '10px', fontWeight: 700, color: sevColor.color,
@@ -49,18 +51,18 @@ export default function FindingsFeed({ findings }: FindingsFeedProps) {
                   padding: '2px 8px', borderRadius: '6px',
                   textTransform: 'uppercase', letterSpacing: '0.5px',
                 }}>
-                  {finding.severity}
+                  {finding.severity || 'LOW'}
                 </span>
               </div>
               <p style={{ fontSize: '11px', color: 'var(--text-secondary)', marginBottom: '6px', lineHeight: 1.4 }}>
-                {finding.summary}
+                {finding.summary || 'Summary unavailable'}
               </p>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span style={{ fontSize: '10px', color: 'var(--text-accent)', fontFamily: 'JetBrains Mono, monospace', fontWeight: 600 }}>
-                  {finding.findingId}
+                  {finding.findingId || 'INC-UNKNOWN'}
                 </span>
                 <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontFamily: 'JetBrains Mono, monospace' }}>
-                  {finding.offender.type}: {finding.offender.value}
+                  {finding.offender?.type || 'unknown'}: {finding.offender?.value || 'unknown'}
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '3px' }}>
                   <Clock size={10} color="var(--text-muted)" />

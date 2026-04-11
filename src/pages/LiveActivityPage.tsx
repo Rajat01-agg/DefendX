@@ -1,5 +1,4 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useWebSocket } from '../hooks/useWebSocket'
 import TelemetryStream from '../components/live/TelemetryStream'
 import CommanderAgent from '../components/live/CommanderAgent'
@@ -10,7 +9,6 @@ import { Play, Square, ChevronDown, Clock, Timer, Zap, Activity, Settings2 } fro
 import type { Job } from '../types/schema'
 
 const LIVE_ACTIVITY_STATE_KEY = 'defendx_live_activity_state'
-const COMPLETION_HOLD_MS = 3 * 60 * 1000
 const TELEMETRY_RENDER_DELAY_MS = 600
 const MAX_PROCESSED_MESSAGE_IDS = 1000
 
@@ -39,15 +37,12 @@ function toAgentFindingShape(job: Job): any[] {
 }
 
 export default function LiveActivityPage() {
-  const navigate = useNavigate()
-  const { connected, messages, socketState, reconnectAttempt } = useWebSocket()
+  const { connected, messages, socketState, reconnectAttempt, connectSocket, disconnectSocket } = useWebSocket()
 
   const [persistedFindings, setPersistedFindings] = useState<any[]>([])
   const [displayedLogs, setDisplayedLogs] = useState<LogEvent[]>([])
   const [activeJobId, setActiveJobId] = useState<string | null>(null)
   const [finalJobSnapshot, setFinalJobSnapshot] = useState<Job | null>(null)
-  const [completionHoldUntil, setCompletionHoldUntil] = useState<number | null>(null)
-  const [completionHoldLeft, setCompletionHoldLeft] = useState<number>(0)
   const logQueue = useRef<LogEvent[]>([])
   const auditStartTimeRef = useRef<number>(Date.now() - 24 * 60 * 60 * 1000) // default to past
   const processedMessageIds = useRef<Set<string>>(new Set())
@@ -56,6 +51,7 @@ export default function LiveActivityPage() {
 
   // Audit control state
   const [showAuditPanel, setShowAuditPanel] = useState(false)
+  const [showSummaryCard, setShowSummaryCard] = useState(false)
   const [selectedMinutes, setSelectedMinutes] = useState(15)
   const [customMinutes, setCustomMinutes] = useState('')
   const [auditRunning, setAuditRunning] = useState(false)
@@ -65,10 +61,6 @@ export default function LiveActivityPage() {
   const applyFinalJobSnapshot = useCallback((job: Job) => {
     setFinalJobSnapshot(job)
     setPersistedFindings(toAgentFindingShape(job))
-    if (job.status === 'COMPLETED') {
-      const holdUntil = Date.now() + COMPLETION_HOLD_MS
-      setCompletionHoldUntil(holdUntil)
-    }
     setAuditTimerId((currentTimerId) => {
       if (currentTimerId) clearInterval(currentTimerId)
       return null
@@ -85,15 +77,11 @@ export default function LiveActivityPage() {
         persistedFindings?: any[]
         activeJobId?: string | null
         finalJobSnapshot?: Job | null
-        completionHoldUntil?: number | null
       }
       if (Array.isArray(parsed.displayedLogs)) setDisplayedLogs(parsed.displayedLogs)
       if (Array.isArray(parsed.persistedFindings)) setPersistedFindings(parsed.persistedFindings)
       if (parsed.activeJobId) setActiveJobId(parsed.activeJobId)
       if (parsed.finalJobSnapshot) setFinalJobSnapshot(parsed.finalJobSnapshot)
-      if (parsed.completionHoldUntil && parsed.completionHoldUntil > Date.now()) {
-        setCompletionHoldUntil(parsed.completionHoldUntil)
-      }
     } catch {
       sessionStorage.removeItem(LIVE_ACTIVITY_STATE_KEY)
     }
@@ -102,43 +90,9 @@ export default function LiveActivityPage() {
   useEffect(() => {
     sessionStorage.setItem(
       LIVE_ACTIVITY_STATE_KEY,
-      JSON.stringify({ displayedLogs, persistedFindings, activeJobId, finalJobSnapshot, completionHoldUntil })
+      JSON.stringify({ displayedLogs, persistedFindings, activeJobId, finalJobSnapshot })
     )
-  }, [displayedLogs, persistedFindings, activeJobId, finalJobSnapshot, completionHoldUntil])
-
-  useEffect(() => {
-    if (!completionHoldUntil) {
-      setCompletionHoldLeft(0)
-      return
-    }
-
-    const updateLeft = () => {
-      const left = Math.max(0, Math.ceil((completionHoldUntil - Date.now()) / 1000))
-      setCompletionHoldLeft(left)
-    }
-
-    updateLeft()
-    const timer = setInterval(updateLeft, 1000)
-    return () => clearInterval(timer)
-  }, [completionHoldUntil])
-
-  useEffect(() => {
-    if (!completionHoldUntil || finalJobSnapshot?.status !== 'COMPLETED') return
-
-    const checkAndNavigate = () => {
-      if (
-        Date.now() >= completionHoldUntil
-        && document.visibilityState === 'visible'
-        && window.location.pathname === '/live'
-      ) {
-        navigate('/dashboard')
-      }
-    }
-
-    checkAndNavigate()
-    const timer = setInterval(checkAndNavigate, 1000)
-    return () => clearInterval(timer)
-  }, [completionHoldUntil, finalJobSnapshot?.status, navigate])
+  }, [displayedLogs, persistedFindings, activeJobId, finalJobSnapshot])
 
   useEffect(() => {
     if (!auditRunning && !activeJobId) return
@@ -171,6 +125,7 @@ export default function LiveActivityPage() {
       }
 
       if (message.state === 'COMPLETED' || message.state === 'ERROR') {
+        console.log('[LIVE] Job state:', message.state, '- NOT closing socket, keeping connection alive')
         if (auditTimerId) clearInterval(auditTimerId)
         setAuditTimerId(null)
         setAuditRunning(false)
@@ -236,24 +191,38 @@ export default function LiveActivityPage() {
     return () => clearInterval(poll)
   }, [activeJobId, connected, finalJobSnapshot?.status, applyFinalJobSnapshot])
 
-  const handleStartAudit = useCallback(async () => {
-    const minutes = customMinutes ? parseInt(customMinutes, 10) : selectedMinutes
-    if (!minutes || minutes <= 0) return
-
-    auditStartTimeRef.current = Date.now()
+  const resetLiveView = useCallback(() => {
     setDisplayedLogs([])
     setPersistedFindings([])
     setFinalJobSnapshot(null)
-    setCompletionHoldUntil(null)
-    setCompletionHoldLeft(0)
     setActiveJobId(null)
+    setShowAuditPanel(false)
+    setAuditElapsed(0)
     sessionStorage.removeItem(LIVE_ACTIVITY_STATE_KEY)
     processedMessageIds.current.clear()
     processedMessageOrder.current = []
     logQueue.current = []
     hydratedJobs.current.clear()
+  }, [])
+
+  const handleAuditToggle = useCallback(async () => {
+    if (auditRunning) {
+      if (auditTimerId) clearInterval(auditTimerId)
+      setAuditTimerId(null)
+      setAuditRunning(false)
+      // disconnectSocket()
+      // resetLiveView()
+      return
+    }
+
+    const minutes = customMinutes ? parseInt(customMinutes, 10) : selectedMinutes
+    if (!minutes || minutes <= 0) return
+
+    auditStartTimeRef.current = Date.now()
+    resetLiveView()
 
     try {
+      connectSocket()
       await apiClient.triggerJob(minutes)
       setAuditRunning(true)
       setAuditElapsed(0)
@@ -274,23 +243,15 @@ export default function LiveActivityPage() {
       setAuditTimerId(id)
     } catch (error) {
       console.error('Failed to trigger job:', error)
+      disconnectSocket()
       // Handle error, maybe show a toast
     }
-  }, [selectedMinutes, customMinutes])
-
-  const handleStopAudit = useCallback(() => {
-    if (auditTimerId) clearInterval(auditTimerId)
-    setAuditRunning(false)
-    setAuditElapsed(0)
-    setAuditTimerId(null)
-  }, [auditTimerId])
+  }, [auditRunning, auditTimerId, customMinutes, selectedMinutes, connectSocket, disconnectSocket, resetLiveView])
 
   const totalSeconds = (customMinutes ? parseInt(customMinutes, 10) : selectedMinutes) * 60
   const progressPct = totalSeconds > 0 ? (auditElapsed / totalSeconds) * 100 : 0
   const elapsedMin = Math.floor(auditElapsed / 60)
   const elapsedSec = auditElapsed % 60
-  const holdMin = Math.floor(completionHoldLeft / 60)
-  const holdSec = completionHoldLeft % 60
 
   const statusBar = [
     { label: 'PIPELINE', value: auditRunning ? 'RUNNING' : (finalJobSnapshot?.status || 'IDLE'), color: auditRunning ? '#05CD99' : '#3965FF' },
@@ -306,7 +267,7 @@ export default function LiveActivityPage() {
 
       {/* ─── Audit Control Bar ─── */}
       <div style={{ marginBottom: '12px', flexShrink: 0 }}>
-        {socketState !== 'connected' && (
+        {socketState !== 'connected' && socketState !== 'completed' && !finalJobSnapshot && (
           <div className="card" style={{ padding: '10px 14px', marginBottom: '10px', borderLeft: '3px solid #FFB547' }}>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>
               Live stream status: <span style={{ fontWeight: 700, color: '#FFB547' }}>{socketState.toUpperCase()}</span>
@@ -413,7 +374,7 @@ export default function LiveActivityPage() {
 
                   {/* Start Audit button */}
                   <button
-                    onClick={handleStartAudit}
+                    onClick={handleAuditToggle}
                     style={{
                       display: 'flex', alignItems: 'center', gap: '6px',
                       padding: '8px 20px', borderRadius: '10px',
@@ -423,25 +384,9 @@ export default function LiveActivityPage() {
                       boxShadow: '0 4px 12px rgba(27, 37, 89, 0.2)',
                     }}
                   >
-                    <Play size={14} fill="#fff" /> Start Audit
+                    {auditRunning ? <Square size={12} fill="#fff" /> : <Play size={14} fill="#fff" />} {auditRunning ? 'Stop Audit' : 'Start Audit'}
                   </button>
                 </>
-              )}
-
-              {auditRunning && (
-                <button
-                  onClick={handleStopAudit}
-                  style={{
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                    padding: '8px 20px', borderRadius: '10px',
-                    background: '#EE5D50', border: 'none',
-                    color: '#fff', fontSize: '13px', fontWeight: 700,
-                    cursor: 'pointer', letterSpacing: '0.5px',
-                    boxShadow: '0 4px 12px rgba(238, 93, 80, 0.2)',
-                  }}
-                >
-                  <Square size={12} fill="#fff" /> Stop Audit
-                </button>
               )}
             </div>
           </div>
@@ -501,7 +446,7 @@ export default function LiveActivityPage() {
                     }}
                   />
                   <button
-                    onClick={handleStartAudit}
+                    onClick={handleAuditToggle}
                     style={{
                       padding: '8px 14px', borderRadius: '8px',
                       background: '#3965FF', border: 'none', color: '#fff',
@@ -527,27 +472,46 @@ export default function LiveActivityPage() {
           <div>
             <div style={{ fontSize: '11px', color: 'var(--text-muted)', letterSpacing: '1px', marginBottom: '2px' }}>LAST COMPLETED JOB</div>
             <div style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-primary)', fontFamily: 'JetBrains Mono, monospace' }}>{finalJobSnapshot.jobId}</div>
-            {completionHoldUntil && completionHoldLeft > 0 && (
-              <div style={{ fontSize: '11px', color: '#3965FF', marginTop: '4px', fontFamily: 'JetBrains Mono, monospace' }}>
-                Retaining this state for {String(holdMin).padStart(2, '0')}:{String(holdSec).padStart(2, '0')} before auto-dashboard
-              </div>
-            )}
+            <div style={{ fontSize: '11px', color: '#3965FF', marginTop: '4px', fontFamily: 'JetBrains Mono, monospace' }}>
+              WebSocket stream remains active. Start a new audit when ready.
+            </div>
           </div>
           <div style={{ display: 'flex', gap: '18px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Status: <span style={{ color: '#05CD99', fontWeight: 700 }}>{finalJobSnapshot.status}</span></div>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Findings: <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{finalJobSnapshot.findingsCount}</span></div>
             <div style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Actions: <span style={{ color: 'var(--text-primary)', fontWeight: 700 }}>{finalJobSnapshot.actionsCount}</span></div>
             <button
-              onClick={() => navigate('/dashboard')}
+              onClick={() => setShowSummaryCard(!showSummaryCard)}
               style={{
                 padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border)',
-                background: 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 600,
+                background: showSummaryCard ? 'var(--border)' : 'var(--bg-surface)', color: 'var(--text-primary)', fontSize: '12px', fontWeight: 600,
                 cursor: 'pointer'
               }}
             >
-              Go Dashboard
+              {showSummaryCard ? 'Hide Summary' : 'View Summary'}
             </button>
           </div>
+        </div>
+      )}
+
+      {showSummaryCard && finalJobSnapshot && (
+        <div className="card" style={{ padding: '20px', marginBottom: '12px', background: 'var(--bg-surface-alt)' }}>
+          <div style={{ fontSize: '12px', fontWeight: 700, color: 'var(--text-primary)', letterSpacing: '1px', marginBottom: '12px' }}>
+            REPORT SUMMARY
+          </div>
+          <pre style={{
+             whiteSpace: 'pre-wrap', 
+             fontFamily: 'JetBrains Mono, monospace', 
+             fontSize: '12px', 
+             color: 'var(--text-secondary)',
+             lineHeight: 1.6,
+             background: '#050810',
+             padding: '16px',
+             borderRadius: '8px',
+             border: '1px solid var(--border)'
+          }}>
+            {(finalJobSnapshot.report as any)?.humanReport || 'Summary not available. Check individual findings.'}
+          </pre>
         </div>
       )}
 

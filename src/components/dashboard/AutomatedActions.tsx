@@ -65,7 +65,7 @@ const ACTION_EMOJI: Record<string, string> = {
   manual_review: '👁️',
 }
 
-export default function AutomatedActions({ actions }: AutomatedActionsProps) {
+export default function AutomatedActions(_props: AutomatedActionsProps) {
   const list = STATIC_REALISTIC_ACTIONS
 
   return (
