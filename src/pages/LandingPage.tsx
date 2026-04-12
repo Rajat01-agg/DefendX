@@ -84,6 +84,52 @@ const USE_CASES = [
   },
 ]
 
+const PRICING = [
+  {
+    tier: 'Startup',
+    price: '$0',
+    frequency: 'forever',
+    target: 'Small startups & side projects',
+    color: '#05CD99',
+    features: [
+      'Up to 10M logs / month',
+      'Community Slack support',
+      'Basic AI Commander module',
+      'Email & Webhook alerts',
+      'Data retention: 7 days'
+    ]
+  },
+  {
+    tier: 'Pro',
+    price: '$12',
+    frequency: 'per 1M logs',
+    target: 'Growing companies requiring scale',
+    color: '#3965FF',
+    popular: true,
+    features: [
+      'Pay-per-use, no minimums',
+      'Advanced AI routing (zero hallucinations)',
+      'Automated remediation (Block IP, ban accounts, etc.)',
+      'Jira & PagerDuty integration',
+      'Data retention: 30 days'
+    ]
+  },
+  {
+    tier: 'Enterprise',
+    price: 'Custom',
+    frequency: 'volume discounts',
+    target: 'Large-scale organizations',
+    color: '#7551FF',
+    features: [
+      'Unlimited log ingestion',
+      'Dedicated TAM & 24/7 Phone support',
+      'Bring your own model (BYOM)',
+      'Custom remediation playbooks & pipelines',
+      'Data retention: 365+ days'
+    ]
+  }
+]
+
 export default function LandingPage() {
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore(s => s.isAuthenticated)
@@ -136,7 +182,7 @@ export default function LandingPage() {
         </div>
         <div style={{ display: 'flex', gap: '8px' }}>
           <a
-            href="https://github.com/rajaXcodes/gaurdianOps"
+            href="https://github.com/rajaXcodes/defend-x"
             target="_blank"
             rel="noopener noreferrer"
             style={{
@@ -238,7 +284,7 @@ export default function LandingPage() {
                 Access Portal <ArrowRight size={16} />
               </button>
               <a
-                href="https://youtu.be/QlcglM-VI2E"
+                href="https://github.com/rajaXcodes/defend-x"
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{
@@ -250,7 +296,7 @@ export default function LandingPage() {
                   boxShadow: '0 2px 10px rgba(27,37,89,0.02)'
                 }}
               >
-                <ExternalLink size={15} /> Watch Demo
+                <GitFork size={15} /> Source Code
               </a>
             </div>
           </div>
@@ -542,6 +588,78 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Pricing & Business Model */}
+      <section style={{ padding: '0 40px 100px', maxWidth: '1100px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+          <h2 style={{ fontSize: '32px', fontWeight: 800, marginBottom: '16px' }}>
+            Transparent, <span style={{ color: '#3965FF' }}>Results-Driven</span> Pricing
+          </h2>
+          <p style={{ fontSize: '16px', color: 'var(--text-secondary)', maxWidth: '650px', margin: '0 auto', lineHeight: 1.6 }}>
+            Traditional SOCs cost <strong style={{ color: '#EE5D50' }}>$250k+ yearly</strong> and still take hours to triage. 
+            DefendX operates at a fraction of the cost by taking a fully event-driven, AI-first approach. 
+            No human delays, and zero idle costs—you only pay for what gets scanned.
+          </p>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px', marginTop: '60px' }}>
+          {PRICING.map(({ tier, price, frequency, target, features, color, popular }) => (
+            <div key={tier} style={{ 
+              position: 'relative', 
+              transform: popular ? 'scale(1.02)' : 'none',
+              zIndex: popular ? 10 : 1 
+            }}>
+              {popular && (
+                <div style={{ 
+                  position: 'absolute', top: -14, left: '50%', transform: 'translateX(-50%)',
+                  background: 'linear-gradient(135deg, #3965FF, #7551FF)',
+                  color: '#fff', fontSize: '11px', fontWeight: 800, letterSpacing: '1px',
+                  padding: '4px 16px', borderRadius: '100px', textTransform: 'uppercase',
+                  zIndex: 20
+                }}>
+                  Most Effective
+                </div>
+              )}
+              <div className="card" style={{ 
+                padding: '32px', 
+                height: '100%',
+                border: popular ? `2px solid ${color}88` : '1px solid var(--border)',
+                boxShadow: popular ? '0 20px 40px rgba(57,101,255,0.1)' : 'none'
+              }}>
+                <h3 style={{ fontSize: '20px', fontWeight: 800, color: 'var(--text-primary)', marginBottom: '8px' }}>{tier}</h3>
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '24px' }}>{target}</p>
+                
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px', marginBottom: '28px' }}>
+                  <span style={{ fontSize: '42px', fontWeight: 900, color }}>{price}</span>
+                  <span style={{ fontSize: '14px', color: 'var(--text-secondary)', fontWeight: 500 }}>/{frequency}</span>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '32px' }}>
+                  {features.map((feat, idx) => (
+                     <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                       <CheckCircle size={16} color={color} style={{ flexShrink: 0, marginTop: '2px' }} />
+                       <span style={{ fontSize: '14px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>{feat}</span>
+                     </div>
+                  ))}
+                </div>
+
+                <button 
+                  onClick={scrollToLogin}
+                  style={{
+                    width: '100%', padding: '14px', borderRadius: '10px',
+                    background: popular ? 'linear-gradient(135deg, #3965FF, #0099BB)' : 'var(--bg-surface)',
+                    border: popular ? 'none' : '1px solid var(--border)',
+                    color: popular ? '#fff' : 'var(--text-primary)',
+                    fontSize: '14px', fontWeight: 700, cursor: 'pointer',
+                    transition: 'opacity 0.2s',
+                  }}
+                >
+                  Get Started
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
       {/* CTA */}
       <section style={{
         padding: '80px 40px', textAlign: 'center',
@@ -568,13 +686,9 @@ export default function LandingPage() {
           Launch DefendX <ArrowRight size={18} />
         </button>
         <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center', gap: '24px' }}>
-          <a href="https://github.com/rajaXcodes/gaurdianOps" target="_blank" rel="noopener noreferrer"
+          <a href="https://github.com/rajaXcodes/defend-x" target="_blank" rel="noopener noreferrer"
             style={{ fontSize: '13px', color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <GitFork size={13} /> GitHub
-          </a>
-          <a href="https://youtu.be/QlcglM-VI2E" target="_blank" rel="noopener noreferrer"
-            style={{ fontSize: '13px', color: 'var(--text-secondary)', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <ExternalLink size={13} /> Demo Video
           </a>
         </div>
       </section>

@@ -12,7 +12,7 @@
 
 **DefendX** is a real-time, autonomous Security Operations Center (SOC) dashboard that detects, triages, and remediates threats — all without human delay. Traditional SOCs take hours. DefendX takes **< 3 seconds**.
 
-[🌐 Live Deployment](https://defend-x.vercel.app/) · [🚀 Live Demo](https://youtu.be/QlcglM-VI2E) · [📂 Backend Repo](https://github.com/rajaXcodes/gaurdianOps)
+[🌐 Live Deployment](https://defend-x.vercel.app/) · [� Backend Repo](https://github.com/rajaXcodes/defend-x)
 
 </div>
 
@@ -237,8 +237,7 @@ DefendX uses a curated cybersecurity-themed design language:
 ## 🔗 Related
 
 - **Live Deployment**: [defend-x.vercel.app](https://defend-x.vercel.app/)
-- **Backend (GuardianOps)**: [github.com/rajaXcodes/gaurdianOps](https://github.com/rajaXcodes/gaurdianOps)
-- **Demo Video**: [youtu.be/QlcglM-VI2E](https://youtu.be/QlcglM-VI2E)
+- **Backend**: [github.com/rajaXcodes/defend-x](https://github.com/rajaXcodes/defend-x)
 
 ---
 
