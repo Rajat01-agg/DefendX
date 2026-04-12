@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Shield, Zap, Eye, EyeOff, Lock, Globe, ArrowRight, CheckCircle, GitFork, ExternalLink, ChevronRight } from 'lucide-react'
+import { Shield, Zap, Eye, EyeOff, Lock, Globe, ArrowRight, CheckCircle, GitFork, ChevronRight } from 'lucide-react'
 import { useAuthStore } from '../store/authStore'
 
 const STATS = [
