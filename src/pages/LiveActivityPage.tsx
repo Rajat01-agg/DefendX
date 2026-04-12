@@ -61,6 +61,7 @@ export default function LiveActivityPage() {
   const applyFinalJobSnapshot = useCallback((job: Job) => {
     setFinalJobSnapshot(job)
     setPersistedFindings(toAgentFindingShape(job))
+    setRemediationActions([])
     setAuditTimerId((currentTimerId) => {
       if (currentTimerId) clearInterval(currentTimerId)
       return null
@@ -123,17 +124,30 @@ export default function LiveActivityPage() {
         }
       }
 
-      // Add this block right after the ANALYZING if-block (after line 123)
-      if (message.state === 'REMEDIATING' && message.payload?.status === 'DONE') {
+      // // Add this block right after the ANALYZING if-block (after line 123)
+      if (message.state === 'REMEDIATING') {
+        const findingId = message.payload?.findingId
+
+        // Look up the matching finding to get offender
+        const matchedFinding = persistedFindings.find(
+          (f: any) => (f.findingId ?? f.finding_id ?? f.id) === findingId
+        )
+        const offender = matchedFinding?.offender
+          ? (typeof matchedFinding.offender === 'string'
+            ? matchedFinding.offender
+            : JSON.stringify(matchedFinding.offender))   // offender is Json type
+          : findingId ?? 'unknown'
+
         setRemediationActions(prev => [...prev, {
-          actionType: message.payload.actionType,
-          findingId: message.payload.findingId,
-          domain: message.payload.domain,
-          actionStatus: message.payload.status,
-          target: message.payload.target,
-          stepId: message.payload.stepId,
+          actionType: message.payload?.actionType,
+          findingId: findingId,
+          domain: message.payload?.domain,
+          actionStatus: message.payload?.actionStatus ?? message.payload?.status ?? 'DONE',
+          target: offender,   // ← now sourced from Finding.offender
+          stepId: message.payload?.stepId,
         }])
       }
+
 
       if (message.state === 'COMPLETED' || message.state === 'ERROR') {
         console.log('[LIVE] Job state:', message.state, '- NOT closing socket, keeping connection alive')
